@@ -58,7 +58,12 @@ prompt() {
 		git_staged_count=$(git diff --cached --numstat | wc -l)
 		git_unstaged_count=$(git diff --numstat | wc -l)
 		git_rev_number=$(git rev-list --count HEAD)
-		scm_summary="$PURPLE$RESET$PURPLE$BOLD${git_branch_current} ⭄ ${git_branch_count} R$PURPLE_LT${git_rev_number}$BOLD+${git_unstaged_count}$RESET$PURPLE+${git_staged_count}$PURPLE_DK|$RESET"
+		scm_summary="$RESET$PURPLE_DK⟜$PURPLE$BOLD${git_branch_current}$RESET$PURPLE_DK⋲ $PURPLE${git_branch_count} R$PURPLE_LT${git_rev_number}$BOLD+${git_unstaged_count}$RESET$PURPLE+${git_staged_count}$PURPLE_DK$RESET"
+	fi
+
+	if [ -n "$APPENV_STATUS" ] || [ -e ".appenv" ]; then
+
+		appenv_status=" $GOLD_DK$(if [ -e ".appenv" ]; then echo "▶"; else echo "▷"; fi)$GOLD$APPENV_STATUS$GOLD_DK "
 	fi
 
 	# Warnings
@@ -74,9 +79,9 @@ prompt() {
 	prompt_path="$(basename $(dirname "$PWD"))/$BOLD$(basename "$PWD")"
 	prompt_left="${status_color}┈$RESET$status_color░▒▓$REVERSE ${prompt_path} $RESET$status_color▓▒░${status_color}»${RESET}"
 	prompt_left_noctrl=$(strip-ansi "$prompt_left")
-	prompt_right="${session_type}${scm_summary}$PURPLE_DK⛬ ${process_count} $(date '+%T')$RESET"
+	prompt_right="${session_type}${scm_summary}${appenv_status}$PURPLE_DK⛬ ${process_count} ○$(date '+%T')$RESET"
 	prompt_right_noctrl=$(strip-ansi "$prompt_right")
-	prompt_right_padded=$(printf "%$(($COLUMNS-${#prompt_right_noctrl}))s%s" "" "$prompt_right_noctrl")
+	prompt_right_padded=$(printf "%$(($COLUMNS-${#prompt_right_noctrl}))s%s" "" "$prompt_right")
 	echo "${prompt_right_padded}"
 	echo "${prompt_left}"
 }

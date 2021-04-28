@@ -1,0 +1,12 @@
+[user]
+	name=Sébastien Pierre
+	email=sebastien.pierre@nzx.com
+[alias]
+	co = checkout
+	cm = commit -a
+	st = status
+	tip = rev-parse HEAD
+[init]
+	defaultBranch = main
+[core]
+	excludesfile = /home/spierre/.gitignore

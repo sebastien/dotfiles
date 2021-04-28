@@ -1,0 +1,7 @@
+*.pyc
+*.cache
+*.swp
+.mypy_cache
+build
+dist
+MANIFEST

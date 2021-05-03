@@ -1,5 +1,7 @@
+BASH_BASE=$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")
+
 set -o vi
-BASE=$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")
+shopt -s extglob
 
 function load-source () {
 	if [ -e "$1" ]; then source "$1"; else echo "Could not source: $1"; fi
@@ -8,23 +10,15 @@ function load-source () {
 # NOTE: We need to set that before any sourcing, as this would erase the
 # COMMAND_PROMPT variable.
 if [ "$TILIX_ID" ] || [ "$VTE_VERSION" ]; then source /etc/profile.d/vte.sh; fi
-load-source "$BASE/setup.sh"
+load-source "$BASH_BASE/setup.sh"
+load-source "$BASH_BASE/aliases.sh"
+load-source "$BASH_BASE/env.sh"
 load-source "$HOME/.cargo/env"
 load-source "$HOME/.local/bin/appenv.bash"
 load-source "$HOME/.nix-profile/etc/profile.d/nix.sh"
 load-source "$HOME/.local/src/z/z.sh"
-load-source "$HOME/.config/bash/sync-history.sh"
-load-source "$HOME/.config/bash/prompt.sh"
-# We can't do load-sour
-
-export EDITOR=nvim
-alias e=nvim
-alias pak-in="sudo apt install"
-alias pak-fd="sudo apt search"
-alias pak-ls="sudo dpkg -L"
-alias ls="exa"
-
-export PATH=$HOME/go/bin:$PATH
-export GUIX_LOCPATH="$HOME/.guix-profile/lib/locale"
+# We need to that later on
+load-source "$BASH_BASE/sync-history.sh"
+load-source "$BASH_BASE/prompt.sh"
 
 # EOF

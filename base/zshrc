@@ -1,0 +1,21 @@
+# -- ZSH Configuration
+# SEE: https://wiki.archlinux.org/title/Zsh
+HISTFILE=~/.histfile
+HISTSIZE=1000
+SAVEHIST=1000
+bindkey -v
+zstyle :compinstall filename '/home/spierre/.zshrc'
+zstyle ':completion:*' menu select
+autoload -Uz compinit
+compinit
+export SHELL=zsh
+
+# History Search
+autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
+zle -N up-line-or-beginning-search
+zle -N down-line-or-beginning-search
+[[ -n "${key[Up]}"   ]] && bindkey -- "${key[Up]}"   up-line-or-beginning-search
+[[ -n "${key[Down]}" ]] && bindkey -- "${key[Down]}" down-line-or-beginning-search
+
+source ~/.config/zsh/config.zsh
+# EOF

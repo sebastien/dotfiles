@@ -3,8 +3,12 @@
 # --
 # SEE: https://en.wikipedia.org/wiki/ANSI_escape_code
 
+# if [[ "$SHELL_TYPE" == "bash" ]]; then
+#   shopt -s extglob # function uses extended globbing
+# fi
+
 function strip-ansi() {
-  shopt -s extglob # function uses extended globbing
+  # shopt -s extglob # function uses extended globbing
   printf %s "${1//$'\e'\[*([0-9;])m/}"
 }
 
@@ -39,16 +43,29 @@ RESET="$(tput sgr0)"
 # [remotehost]
 # ▒█~/W/tlang » ▓▒░cd appenv/    ⏲ default|1 ⑂ R103+|103 ⋐ tlang:projects:tdoc
 
-prompt() {
+function scm-type {
+    git branch >/dev/null 2>/dev/null && echo '±' && return
+    hg root >/dev/null 2>/dev/null && echo '☿' && return
+    echo '○'
+}
+
+function prompt-setup {
+	STATUS_COLOR=$(if [[ $? == 0 ]]; then echo -n "${BLUE}"; else echo -n "${RED}"; fi)
+	export STATUS_COLOR
+}
+
+function prompt-left {
+	prompt_path="$(basename $(dirname "$PWD"))/$BOLD$(basename "$PWD")"
+	echo "$STATUS_COLOR─$RESET$STATUS_COLOR░▒▓$REVERSE ${prompt_path} $RESET$STATUS_COLOR▓▒░${STATUS_COLOR} ▷${RESET} "
+}
+
+function prompt-right {
 	# NOTE: This has got to be the first line
 	process_count=$(ps -u "$USER" | wc -l)
-
-	status_color=$(if [[ $? == 0 ]]; then echo -n "${BLUE}"; else echo -n "${RED}"; fi)
 	# As usual, Arch Linux has a great [Bash/Prompt customization](https://wiki.archlinux.org/index.php/Bash/Prompt_customization)
 	# page.
 	# SEE: https://unix.stackexchange.com/questions/9605/how-can-i-detect-if-the-shell-is-controlled-from-ssh#9607
 	session_type=$(if [[ $(who am i) =~ \([-a-zA-Z0-9\.]+\)$ ]] ; then echo -n ssh; fi)
-
 	# We get Git information
 	scm_summary=""
 	git_branch=$(git branch --no-color -l 2> /dev/null)
@@ -58,14 +75,11 @@ prompt() {
 		git_staged_count=$(git diff --cached --numstat | wc -l)
 		git_unstaged_count=$(git diff --numstat | wc -l)
 		git_rev_number=$(git rev-list --count HEAD)
-		scm_summary="$RESET$PURPLE_DK⟜$PURPLE$BOLD${git_branch_current}$RESET$PURPLE_DK⋲ $PURPLE${git_branch_count} R$PURPLE_LT${git_rev_number}$BOLD+${git_unstaged_count}$RESET$PURPLE+${git_staged_count}$PURPLE_DK$RESET"
+		scm_summary="$RESET$PURPLE_DK⟜$PURPLE$BOLD${git_branch_current}$RESET$PURPLE_DK⋲ $PURPLE${git_branch_count} $(scm-type)R$PURPLE_LT${git_rev_number}$BOLD+${git_unstaged_count}$RESET$PURPLE+${git_staged_count}$PURPLE_DK$RESET"
 	fi
-
 	if [ -n "$APPENV_STATUS" ] || [ -e ".appenv" ]; then
-
 		appenv_status=" $GOLD_DK$(if [ -e ".appenv" ]; then echo "▶"; else echo "▷"; fi)$GOLD$APPENV_STATUS$GOLD_DK "
 	fi
-
 	# Warnings
 	# This is the disk capacity in %
 	stat_hdd_capacity=$(df -h . | tail -n1 | awk '{print $5}')
@@ -75,16 +89,23 @@ prompt() {
 	# NOTE: I tried different options and used the one that's the fastest. We don't
 	# want thr prompt to take too long.
 	stat_cpu_usage=$(mpstat | awk '$12 ~ /[0-9.]+/ { print 100 - $12"%" }')
-
-	prompt_path="$(basename $(dirname "$PWD"))/$BOLD$(basename "$PWD")"
-	prompt_left="${status_color}┈$RESET$status_color░▒▓$REVERSE ${prompt_path} $RESET$status_color▓▒░${status_color}»${RESET}"
-	prompt_left_noctrl=$(strip-ansi "$prompt_left")
-	prompt_right="${session_type}${scm_summary}${appenv_status}$PURPLE_DK⛬ ${process_count} ○$(date '+%T')$RESET"
-	prompt_right_noctrl=$(strip-ansi "$prompt_right")
-	prompt_right_padded=$(printf "%$(($COLUMNS-${#prompt_right_noctrl}))s%s" "" "$prompt_right")
-	echo "${prompt_right_padded}"
-	echo "${prompt_left}"
+	echo "${session_type}${scm_summary}${appenv_status}$PURPLE_DK⛬ ${process_count} ○$(date '+%T')$RESET"
 }
 
-export PS1='$(prompt) '
+
+if [[ "$SHELL_TYPE" == "bash" ]]; then
+	function prompt() {
+		prompt-setup
+		prompt_left="$(prompt-left)"
+		prompt_right="$(prompt-right)"
+		prompt_left_noctrl=$(strip-ansi "$prompt_left")
+		prompt_right_noctrl=$(strip-ansi "$prompt_right")
+		prompt_right_padded=$(printf "%$(($COLUMNS-${#prompt_right_noctrl}))s%s" "" "$prompt_right")
+		echo "${prompt_right_padded}"
+		echo "${prompt_left}"
+	}
+	PS1='$(prompt)'
+	export PS1
+fi
+
 # EOF

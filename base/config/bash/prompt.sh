@@ -2,6 +2,8 @@
 # # Bash Prompt
 # --
 # SEE: https://en.wikipedia.org/wiki/ANSI_escape_code
+# SEE: https://stackoverflow.com/questions/1133031/shell-prompt-line-wrapping-issue#2774197
+# SEE: https://stackoverflow.com/questions/1133031/shell-prompt-line-wrapping-issue
 
 # if [[ "$SHELL_TYPE" == "bash" ]]; then
 #   shopt -s extglob # function uses extended globbing
@@ -21,23 +23,42 @@ function palette {
 	echo
 }
 
-CYAN="$(tput setaf 33)"
-BLUE_DK="$(tput setaf 27)"
-BLUE="$(tput setaf 33)"
-BLUE_LT="$(tput setaf 117)"
-GREEN="$(tput setaf 34)"
-YELLOW="$(tput setaf 220)"
-GOLD="$(tput setaf 214)"
-GOLD_DK="$(tput setaf 208)"
-PURPLE_DK="$(tput setaf 55)"
-PURPLE="$(tput setaf 92)"
-PURPLE_LT="$(tput setaf 163)"
-RED="$(tput setaf 124)"
-ORANGE="$(tput setaf 202)"
-BOLD="$(tput bold)"
-REVERSE="$(tput rev)"
-NOT_BOLD="\\033[2m"
-RESET="$(tput sgr0)"
+# CYAN="$(tput setaf 33)"
+# BLUE_DK="$(tput setaf 27)"
+# BLUE="$(tput setaf 33)"
+# BLUE_LT="$(tput setaf 117)"
+# GREEN="$(tput setaf 34)"
+# YELLOW="$(tput setaf 220)"
+# GOLD="$(tput setaf 214)"
+# GOLD_DK="$(tput setaf 208)"
+# PURPLE_DK="$(tput setaf 55)"
+# PURPLE="$(tput setaf 92)"
+# PURPLE_LT="$(tput setaf 163)"
+# RED="$(tput setaf 124)"
+# ORANGE="$(tput setaf 202)"
+# BOLD="$(tput bold)"
+# REVERSE="$(tput rev)"
+# NOT_BOLD="\\033[2m"
+# RESET="$(tput sgr0)"
+
+CYAN=""
+BLUE_DK=""
+BLUE=""
+BLUE_LT=""
+GREEN=""
+YELLOW=""
+GOLD=""
+GOLD_DK=""
+PURPLE_DK=""
+PURPLE=""
+PURPLE_LT=""
+RED=""
+ORANGE=""
+BOLD=""
+REVERSE=""
+NOT_BOLD=""
+RESET=""
+
 
 # Path
 # [remotehost]
@@ -104,7 +125,9 @@ if [[ "$SHELL_TYPE" == "bash" ]]; then
 		echo "${prompt_right_padded}"
 		echo "${prompt_left}"
 	}
-	PS1='$(prompt)'
+	# NOTE: I can't get the wrapping to work properly, we need the
+	# [ and ] to get the line count right.
+	PS1="\[$(tput setaf 33)\]\$(prompt)\[$(tput sgr0)\]"
 	export PS1
 fi
 

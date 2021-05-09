@@ -1,1 +1,4 @@
+deps
 backup
+base/config/bash/atuin.sh
+base/config/bash/preexec.sh

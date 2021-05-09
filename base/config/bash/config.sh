@@ -2,6 +2,8 @@ BASH_BASE=$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")
 
 set -o vi
 shopt -s extglob
+shopt -s checkwinsize
+
 
 # Nicer shell experience
 # FROM <https://opensource.com/article/20/3/fish-shell>
@@ -30,7 +32,8 @@ load-source "$HOME/.local/bin/appenv.bash"
 load-source "$HOME/.nix-profile/etc/profile.d/nix.sh"
 load-source "$HOME/.local/src/z/z.sh"
 # We need to that later on
-load-source "$BASH_BASE/sync-history.sh"
+load-source "$BASH_BASE/preexec.sh"
+load-source "$BASH_BASE/atuin.sh"
 load-source "$BASH_BASE/prompt.sh"
 
 # EOF

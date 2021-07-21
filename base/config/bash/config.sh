@@ -33,7 +33,6 @@ load-source "$HOME/.nix-profile/etc/profile.d/nix.sh"
 load-source "$HOME/.local/src/z/z.sh"
 # We need to that later on
 load-source "$BASH_BASE/preexec.sh"
-load-source "$BASH_BASE/atuin.sh"
 load-source "$BASH_BASE/prompt.sh"
 
 # EOF

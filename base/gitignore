@@ -2,6 +2,9 @@
 *.cache
 *.swp
 .mypy_cache
+.deps
 build
 dist
+.secrets
+.secrets.*
 MANIFEST

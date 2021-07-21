@@ -1,3 +1,16 @@
 appenv_declare projects
-appenv_prepend PYTHONPATH "$HOME/Workspace/cuisine/src"
-appenv_prepend PYTHONPATH "$HOME/Workspace/reporter/src"
+appenv_set COMMUNITY "$HOME/Workspace/Community"
+appenv_prepend PYTHONPATH "$COMMUNITY/cuisine/src"
+appenv_prepend PYTHONPATH "$COMMUNITY/reporter/src"
+appenv_prepend PYTHONPATH "$COMMUNITY/cells/src/py"
+appenv_prepend PATH       "$COMMUNITY/cells/bin"
+appenv_prepend PYTHONPATH "$COMMUNITY/sink/src"
+appenv_prepend PATH       "$COMMUNITY/sink/bin"
+appenv_prepend PYTHONPATH "$COMMUNITY/texto/src"
+appenv_prepend PATH       "$COMMUNITY/texto/bin"
+appenv_prepend PYTHONPATH "$COMMUNITY/snap/src/py"
+appenv_prepend PATH       "$COMMUNITY/snap/bin"
+appenv_prepend PYTHONPATH "$COMMUNITY/retro/src"
+appenv_prepend PYTHONPATH "$HOME/Workspace/shared-secrets/src/py"
+appenv_prepend PATH       "$HOME/Workspace/shared-secrets/bin"
+# EOF

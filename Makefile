@@ -5,7 +5,7 @@ ACTIVE=$(filter $(PROFILE)/%,$(SOURCES) $(DEPS_BASH:%=base/config/bash/%))
 PRODUCT=$(ACTIVE:$(PROFILE)/%=$(HOME)/.%) $(TOOLS:%=deps/bin/%)
 NOW:=$(shell date +"%Y-%m-%dT%H:%M:%S")
 BASE:=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))
-TOOLS:=atuin
+TOOLS:=
 
 mkdir-parent=$(shell if [ ! -d "$(dir $(1))" ]; then mkdir -p "$(dir $(1))"; fi; echo "$(1)")
 
@@ -25,14 +25,5 @@ base/config/bash/sync-history.sh:
 
 base/config/bash/preexec.sh:
 	curl -o "$@" "https://raw.githubusercontent.com/rcaloras/bash-preexec/master/bash-preexec.sh"
-
-base/config/bash/atuin.sh: deps/bin/atuin
-	echo 'eval "$$(atuin init bash)"' > "$@"
-
-deps/bin/atuin:
-	@echo $(call mkdir-parent,$@)
-	@if [ ! "$$(which atuin 2> /dev/null)" ]; then cargo install atuin; fi
-	@which atuin && ln -sfr $$(which atuin) "$@"; true
-
 
 # EOF

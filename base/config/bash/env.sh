@@ -1,4 +1,9 @@
 export EDITOR=nvim
-export PATH=$HOME/go/bin:$PATH
+export GOPATH=$HOME/.local/share/go
 export GUIX_LOCPATH="$HOME/.guix-profile/lib/locale"
+export NPM_PACKAGES="$HOME/.local/share/npm"
+export NODE_PATH="$NPM_PACKAGES/lib/node_modules:$NODE_PATH"
+export DENO_INSTALL="$HOME/.deno"
+export PATH="$DENO_INSTALL/bin:$GOPATH/bin:$NPM_PACKAGES/bin/:$PATH"
+
 # EOF

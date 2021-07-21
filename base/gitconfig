@@ -1,7 +1,13 @@
 [user]
 	name=Sébastien Pierre
 	email=sebastien.pierre@nzx.com
+[pull]
+	# SEE: https://stackoverflow.com/questions/2472254/when-should-i-use-git-pull-rebase
+	rebase  = false
 [alias]
+	ds = diff --staged
+	# https://www.shellhacks.com/git-diff-staged-unstaged-files/
+	d  = status -vv
 	co = checkout
 	cm = commit -a
 	st = status

@@ -12,7 +12,14 @@
 	cm = commit -a
 	st = status
 	tip = rev-parse HEAD
+	pr = pull --recurse-submodules
+	supr = submodule update --remote
+	sup = submodule update
+	sin = submodule init
+	rb = checkout --track
 [init]
 	defaultBranch = main
 [core]
 	excludesfile = /home/spierre/.gitignore
+[fetch]
+	prune = true

@@ -28,11 +28,13 @@ load-source "$BASH_BASE/setup.sh"
 load-source "$BASH_BASE/aliases.sh"
 load-source "$BASH_BASE/env.sh"
 load-source "$HOME/.cargo/env"
-load-source "$HOME/.local/bin/appenv.bash"
+# load-source "$HOME/.local/bin/appenv.bash"
+load-source "$HOME/Workspace/Community/appenv/bin/appenv.bash"
 load-source "$HOME/.nix-profile/etc/profile.d/nix.sh"
 load-source "$HOME/.local/src/z/z.sh"
 # We need to that later on
 load-source "$BASH_BASE/preexec.sh"
 load-source "$BASH_BASE/prompt.sh"
+if [ -s "$(which direnv 2> /dev/null)" ]; then eval "$(direnv hook bash)"; fi
 
 # EOF

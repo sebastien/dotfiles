@@ -19,3 +19,5 @@ zle -N down-line-or-beginning-search
 
 source ~/.config/zsh/config.zsh
 # EOF
+
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh

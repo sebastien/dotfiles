@@ -114,7 +114,7 @@ function prompt-right {
 }
 
 
-if [[ "$SHELL_TYPE" == "bash" ]]; then
+if [ -z "$SHELL_TYPE" ] || [[ "$SHELL_TYPE" == "bash" ]]; then
 	function prompt() {
 		prompt-setup
 		prompt_left="$(prompt-left)"

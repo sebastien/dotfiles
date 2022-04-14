@@ -35,6 +35,11 @@ load-source "$HOME/.local/src/z/z.sh"
 # We need to that later on
 load-source "$BASH_BASE/preexec.sh"
 load-source "$BASH_BASE/prompt.sh"
+
+for completion in $BASH_BASE/completion.*.sh; do
+	load-source "$completion"
+done
+
 if [ -s "$(which direnv 2> /dev/null)" ]; then eval "$(direnv hook bash)"; fi
 
 # EOF

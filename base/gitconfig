@@ -17,9 +17,12 @@
 	sup = submodule update
 	sin = submodule init
 	rb = checkout --track
+	br = branch --remote
 [init]
 	defaultBranch = main
 [core]
 	excludesfile = ~/.gitignore
 [fetch]
 	prune = true
+[submodule]
+	recurse = true

@@ -19,6 +19,8 @@ appenv_prepend PATH       "$COMMUNITY/multiplex/bin"
 appenv_prepend PYTHONPATH "$COMMUNITY/multiplex/src/py"
 appenv_prepend PATH       "$COMMUNITY/sdoc/bin"
 appenv_prepend PYTHONPATH "$COMMUNITY/sdoc/src/py"
+appenv_prepend PATH       "$COMMUNITY/smalldoc/bin"
+appenv_prepend PYTHONPATH "$COMMUNITY/smalldoc/src/py"
 appenv_prepend PYTHONPATH "$HOME/Workspace/Current/shared-secrets/src/py"
 appenv_prepend PATH       "$HOME/Workspace/Current/shared-secrets/bin"
 # EOF

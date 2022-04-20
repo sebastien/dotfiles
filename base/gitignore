@@ -1,8 +1,10 @@
 .pyre
 *.pyc
 *.cache
+*cache__
 *.swp
 .mypy_cache
+__pycache__
 .deps
 build
 dist

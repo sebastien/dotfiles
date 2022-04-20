@@ -1,5 +1,5 @@
 PROFILE=base
-DEPS_BASH:=sync-history.sh preexec.sh 
+DEPS_BASH:=sync-history.sh preexec.sh
 SOURCES=$(shell find $(PROFILE) -type f)
 ACTIVE=$(filter $(PROFILE)/%,$(SOURCES) $(DEPS_BASH:%=base/config/bash/%))
 PRODUCT=$(ACTIVE:$(PROFILE)/%=$(HOME)/.%) $(TOOLS:%=deps/bin/%)

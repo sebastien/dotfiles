@@ -1,6 +1,6 @@
 [user]
 	name=Sébastien Pierre
-	email=sebastien.pierre@nzx.com
+	email=sebastien.pierre@gmail.com
 [pull]
 	# SEE: https://stackoverflow.com/questions/2472254/when-should-i-use-git-pull-rebase
 	rebase  = false
@@ -20,6 +20,6 @@
 [init]
 	defaultBranch = main
 [core]
-	excludesfile = /home/spierre/.gitignore
+	excludesfile = ~/.gitignore
 [fetch]
 	prune = true

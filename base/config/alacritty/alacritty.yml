@@ -1,0 +1,54 @@
+schemes:
+  Monokai: &dark # custom theme name
+
+    # Default colors
+    primary:
+      background: '0x062a38'
+      foreground: '0xf7f7f7'
+
+    # Normal colors
+    normal:
+      black:   '0x272822'
+      red:     '0xA70334'
+      green:   '0x74AA04'
+      yellow:  '0xB6B649'
+      blue:    '0x01549E'
+      magenta: '0x89569C'
+      cyan:    '0x1A83A6'
+      white:   '0xCACACA'
+
+    # Bright colors
+    bright:
+      black:   '0x7C7C7C'
+      red:     '0xF3044B'
+      green:   '0x8DD006'
+      yellow:  '0xCCCC81'
+      blue:    '0x0383F5'
+      magenta: '0xa87db8'
+      cyan:    '0x58C2E5'
+      white:   '0xFFFFFF'
+
+# Colors (Monokai Dark)
+colors: *dark # use predefined theme
+
+font:
+  size: 11
+  normal:
+    family: Iosevka Term
+
+
+env:
+  TERM: xterm-256color
+
+window:
+  decorations: Full
+  opacity: 0.9
+
+mouse_bindings:
+  - { mouse: Right, action: PasteSelection }
+
+selection:
+  # When set to `true`, selected text will be copied to the primary clipboard.
+  save_to_clipboard: true
+
+# EOF

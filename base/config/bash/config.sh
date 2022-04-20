@@ -18,7 +18,11 @@ export LC_ALL="en_US.UTF-8"; # byte-wise sorting and force language for those pe
 export MANPAGER="less -X"; # Less is more
 
 function load-source () {
-	if [ -e "$1" ]; then source "$1"; else echo "Could not source: $1"; fi
+	if [ -e "$1" ]; then
+		source "$1"
+	elif [ -z "$2" ]; then
+		echo "Could not source: $1"
+	fi
 }
 
 # NOTE: We need to set that before any sourcing, as this would erase the

@@ -1,5 +1,6 @@
 .pyre
 *.pyc
+*.egg-info
 *.cache
 *cache__
 *.swp

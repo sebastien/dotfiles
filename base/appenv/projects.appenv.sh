@@ -1,26 +1,19 @@
 appenv_declare projects
-appenv_set COMMUNITY "$HOME/Workspace/Community"
-appenv_prepend PYTHONPATH "$COMMUNITY/cuisine/src"
-appenv_prepend PYTHONPATH "$COMMUNITY/reporter/src"
-appenv_prepend PYTHONPATH "$COMMUNITY/cells/src/py"
-appenv_prepend PATH       "$COMMUNITY/cells/bin"
-appenv_prepend PYTHONPATH "$COMMUNITY/sink/src"
-appenv_prepend PATH       "$COMMUNITY/sink/bin"
-appenv_prepend PYTHONPATH "$COMMUNITY/texto/src"
-appenv_prepend PATH       "$COMMUNITY/texto/bin"
-appenv_prepend PYTHONPATH "$COMMUNITY/snap/src/py"
-appenv_prepend PATH       "$COMMUNITY/snap/bin"
-appenv_prepend PYTHONPATH "$COMMUNITY/retro/src"
-appenv_prepend PATH       "$COMMUNITY/macme/bin"
-appenv_prepend PYTHONPATH "$COMMUNITY/macme/src/py"
-appenv_prepend PATH       "$COMMUNITY/deltaflow/bin"
-appenv_prepend PYTHONPATH "$COMMUNITY/deltaflow/src/py"
-appenv_prepend PATH       "$COMMUNITY/multiplex/bin"
-appenv_prepend PYTHONPATH "$COMMUNITY/multiplex/src/py"
-appenv_prepend PATH       "$COMMUNITY/sdoc/bin"
-appenv_prepend PYTHONPATH "$COMMUNITY/sdoc/src/py"
-appenv_prepend PATH       "$COMMUNITY/smalldoc/bin"
-appenv_prepend PYTHONPATH "$COMMUNITY/smalldoc/src/py"
-appenv_prepend PYTHONPATH "$HOME/Workspace/Current/shared-secrets/src/py"
-appenv_prepend PATH       "$HOME/Workspace/Current/shared-secrets/bin"
+PROJECTS_DIR="$HOME/Workspace $HOME/Workspace/Community"
+PROJECTS="cuisine retro reporter cells sink texto snap macme multiplex sdoc smalldoc shared-secrets"
+for project in $PROJECTS; do
+	for parent in $PROJECTS_DIR; do
+		path="$parent/$project"
+		if [ -d "$path" ]; then
+			if [ ! -z "$(ls $path/src/py/*/*.py 2> /dev/null)" ]; then
+				appenv_prepend PYTHONPATH "$path/src/py"
+			elif [ ! -z "$(ls $parent/$project/src/*/*.py 2> /dev/null)" ]; then
+				appenv_prepend PYTHONPATH "$path/src"
+			fi
+			if [ -d "$path/bin" ]; then
+				appenv_prepend PATH "$path/bin"
+			fi
+		fi
+	done
+done
 # EOF

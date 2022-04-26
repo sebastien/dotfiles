@@ -18,6 +18,8 @@
 	sin = submodule init
 	rb = checkout --track
 	br = branch --remote
+	# List all branches, including remote
+	lsb = branch -a
 [init]
 	defaultBranch = main
 [core]

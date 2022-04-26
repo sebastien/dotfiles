@@ -1,0 +1,2 @@
+[sink]
+diff=nvim -d {0} {1} {2}

@@ -87,7 +87,7 @@ function prompt-right {
 	# page.
 	# SEE: https://unix.stackexchange.com/questions/9605/how-can-i-detect-if-the-shell-is-controlled-from-ssh#9607
 	if [[ $(who am i) =~ \([-a-zA-Z0-9\.]+\)$ ]] ; then
-		session_type="┈⦗ssh@HOSTNAME⦘"
+		session_type="┈⦗ssh@$HOSTNAME⦘"
 	else
 		session_type=""
 	fi

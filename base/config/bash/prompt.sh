@@ -23,41 +23,41 @@ function palette {
 	echo
 }
 
-# CYAN="$(tput setaf 33)"
-# BLUE_DK="$(tput setaf 27)"
-# BLUE="$(tput setaf 33)"
-# BLUE_LT="$(tput setaf 117)"
-# GREEN="$(tput setaf 34)"
-# YELLOW="$(tput setaf 220)"
-# GOLD="$(tput setaf 214)"
-# GOLD_DK="$(tput setaf 208)"
-# PURPLE_DK="$(tput setaf 55)"
-# PURPLE="$(tput setaf 92)"
-# PURPLE_LT="$(tput setaf 163)"
-# RED="$(tput setaf 124)"
-# ORANGE="$(tput setaf 202)"
-# BOLD="$(tput bold)"
-# REVERSE="$(tput rev)"
-# NOT_BOLD="\\033[2m"
-# RESET="$(tput sgr0)"
+CYAN="$(tput setaf 33)"
+BLUE_DK="$(tput setaf 27)"
+BLUE="$(tput setaf 33)"
+BLUE_LT="$(tput setaf 117)"
+GREEN="$(tput setaf 34)"
+YELLOW="$(tput setaf 220)"
+GOLD="$(tput setaf 214)"
+GOLD_DK="$(tput setaf 208)"
+PURPLE_DK="$(tput setaf 55)"
+PURPLE="$(tput setaf 92)"
+PURPLE_LT="$(tput setaf 163)"
+RED="$(tput setaf 124)"
+ORANGE="$(tput setaf 202)"
+BOLD="$(tput bold)"
+REVERSE="$(tput rev)"
+NOT_BOLD="\\033[2m"
+RESET="$(tput sgr0)"
 
-CYAN=""
-BLUE_DK=""
-BLUE=""
-BLUE_LT=""
-GREEN=""
-YELLOW=""
-GOLD=""
-GOLD_DK=""
-PURPLE_DK=""
-PURPLE=""
-PURPLE_LT=""
-RED=""
-ORANGE=""
-BOLD=""
-REVERSE=""
-NOT_BOLD=""
-RESET=""
+# CYAN=""
+# BLUE_DK=""
+# BLUE=""
+# BLUE_LT=""
+# GREEN=""
+# YELLOW=""
+# GOLD=""
+# GOLD_DK=""
+# PURPLE_DK=""
+# PURPLE=""
+# PURPLE_LT=""
+# RED=""
+# ORANGE=""
+# BOLD=""
+# REVERSE=""
+# NOT_BOLD=""
+# RESET=""
 
 
 # Path
@@ -86,7 +86,11 @@ function prompt-right {
 	# As usual, Arch Linux has a great [Bash/Prompt customization](https://wiki.archlinux.org/index.php/Bash/Prompt_customization)
 	# page.
 	# SEE: https://unix.stackexchange.com/questions/9605/how-can-i-detect-if-the-shell-is-controlled-from-ssh#9607
-	session_type=$(if [[ $(who am i) =~ \([-a-zA-Z0-9\.]+\)$ ]] ; then echo -n ssh; fi)
+	if [[ $(who am i) =~ \([-a-zA-Z0-9\.]+\)$ ]] ; then
+		session_type="┈⦗ssh@HOSTNAME⦘"
+	else
+		session_type=""
+	fi
 	# We get Git information
 	scm_summary=""
 	git_branch=$(git branch --no-color -l 2> /dev/null)
@@ -110,7 +114,7 @@ function prompt-right {
 	# NOTE: I tried different options and used the one that's the fastest. We don't
 	# want thr prompt to take too long.
 	stat_cpu_usage=$(mpstat | awk '$12 ~ /[0-9.]+/ { print 100 - $12"%" }')
-	echo "${session_type}${scm_summary}${appenv_status}$PURPLE_DK⛬ ${process_count} ○$(date '+%T')$RESET"
+	echo "${scm_summary}${appenv_status}$PURPLE_DK⛬ ${process_count} ○$(date '+%T')$PURPLE${session_type}$RESET"
 }
 
 

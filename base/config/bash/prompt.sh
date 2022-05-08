@@ -4,6 +4,7 @@
 # SEE: https://en.wikipedia.org/wiki/ANSI_escape_code
 # SEE: https://stackoverflow.com/questions/1133031/shell-prompt-line-wrapping-issue#2774197
 # SEE: https://stackoverflow.com/questions/1133031/shell-prompt-line-wrapping-issue
+# SEE: https://stackoverflow.com/questions/37424743/sometimes-cursor-jumps-to-start-of-line-in-bash-prompt
 
 # if [[ "$SHELL_TYPE" == "bash" ]]; then
 #   shopt -s extglob # function uses extended globbing
@@ -23,41 +24,41 @@ function palette {
 	echo
 }
 
-CYAN="$(tput setaf 33)"
-BLUE_DK="$(tput setaf 27)"
-BLUE="$(tput setaf 33)"
-BLUE_LT="$(tput setaf 117)"
-GREEN="$(tput setaf 34)"
-YELLOW="$(tput setaf 220)"
-GOLD="$(tput setaf 214)"
-GOLD_DK="$(tput setaf 208)"
-PURPLE_DK="$(tput setaf 55)"
-PURPLE="$(tput setaf 92)"
-PURPLE_LT="$(tput setaf 163)"
-RED="$(tput setaf 124)"
-ORANGE="$(tput setaf 202)"
-BOLD="$(tput bold)"
-REVERSE="$(tput rev)"
-NOT_BOLD="\\033[2m"
-RESET="$(tput sgr0)"
-
-# CYAN=""
-# BLUE_DK=""
-# BLUE=""
-# BLUE_LT=""
-# GREEN=""
-# YELLOW=""
-# GOLD=""
-# GOLD_DK=""
-# PURPLE_DK=""
-# PURPLE=""
-# PURPLE_LT=""
-# RED=""
-# ORANGE=""
-# BOLD=""
-# REVERSE=""
-# NOT_BOLD=""
-# RESET=""
+if [ -z "$NOCOLOR" ] ; then
+	CYAN="$(tput setaf 33)"
+	BLUE_DK="$(tput setaf 27)"
+	BLUE="$(tput setaf 33)"
+	BLUE_LT="$(tput setaf 117)"
+	GREEN="$(tput setaf 34)"
+	YELLOW="$(tput setaf 220)"
+	GOLD="$(tput setaf 214)"
+	GOLD_DK="$(tput setaf 208)"
+	PURPLE_DK="$(tput setaf 55)"
+	PURPLE="$(tput setaf 92)"
+	PURPLE_LT="$(tput setaf 163)"
+	RED="$(tput setaf 124)"
+	ORANGE="$(tput setaf 202)"
+	BOLD="$(tput bold)"
+	REVERSE="$(tput rev)"
+	RESET="$(tput sgr0)"
+elif tput setaf 1 &> /dev/null; then
+	CYAN=""
+	BLUE_DK=""
+	BLUE=""
+	BLUE_LT=""
+	GREEN=""
+	YELLOW=""
+	GOLD=""
+	GOLD_DK=""
+	PURPLE_DK=""
+	PURPLE=""
+	PURPLE_LT=""
+	RED=""
+	ORANGE=""
+	BOLD=""
+	REVERSE=""
+	RESET=""
+fi
 
 
 # Path
@@ -123,15 +124,15 @@ if [ -z "$SHELL_TYPE" ] || [[ "$SHELL_TYPE" == "bash" ]]; then
 		prompt-setup
 		prompt_left="$(prompt-left)"
 		prompt_right="$(prompt-right)"
-		prompt_left_noctrl=$(strip-ansi "$prompt_left")
-		prompt_right_noctrl=$(strip-ansi "$prompt_right")
-		prompt_right_padded=$(printf "%$(($COLUMNS-${#prompt_right_noctrl}))s%s" "" "$prompt_right")
-		echo "${prompt_right_padded}"
+		# prompt_left_noctrl=$(strip-ansi "$prompt_left")
+		# prompt_right_noctrl=$(strip-ansi "$prompt_right")
+		# prompt_right_padded=$(printf "%$(($COLUMNS-${#prompt_right_noctrl}))s%s" "" "$prompt_right")
+		echo "${prompt_right}"
 		echo "${prompt_left}"
 	}
 	# NOTE: I can't get the wrapping to work properly, we need the
 	# [ and ] to get the line count right.
-	PS1="\[$(tput setaf 33)\]\$(prompt)\[$(tput sgr0)\]"
+	PS1="$CYAN$(prompt)$RESET"
 	export PS1
 fi
 

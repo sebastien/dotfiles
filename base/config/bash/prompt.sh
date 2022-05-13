@@ -132,7 +132,7 @@ if [ -z "$SHELL_TYPE" ] || [[ "$SHELL_TYPE" == "bash" ]]; then
 	}
 	# NOTE: I can't get the wrapping to work properly, we need the
 	# [ and ] to get the line count right.
-	PS1="$CYAN$(prompt)$RESET"
+	PS1="$CYAN\$(prompt)$RESET"
 	export PS1
 fi
 

@@ -1,6 +1,8 @@
 # --
 # # Bash Prompt
+#
 # --
+# NOTE: The trick is that colors need to be put between \[ and\] in the prompt.
 # SEE: https://en.wikipedia.org/wiki/ANSI_escape_code
 # SEE: https://stackoverflow.com/questions/1133031/shell-prompt-line-wrapping-issue#2774197
 # SEE: https://stackoverflow.com/questions/1133031/shell-prompt-line-wrapping-issue
@@ -10,9 +12,15 @@
 #   shopt -s extglob # function uses extended globbing
 # fi
 
+HAS_MPSTAT=$(which mpstat 2> /dev/null)
+
 function strip-ansi() {
   # shopt -s extglob # function uses extended globbing
   printf %s "${1//$'\e'\[*([0-9;])m/}"
+}
+
+function strip-prompt() {
+	strip-ansi "$1" | sed 's/\\\[//g;s/\\\]//g'
 }
 
 function palette {
@@ -77,8 +85,8 @@ function prompt-setup {
 }
 
 function prompt-left {
-	prompt_path="$(basename $(dirname "$PWD"))/$BOLD$(basename "$PWD")"
-	echo "$STATUS_COLOR─$RESET$STATUS_COLOR░▒▓$REVERSE ${prompt_path} $RESET$STATUS_COLOR▓▒░${STATUS_COLOR} ▷${RESET} "
+	prompt_path="$(basename $(dirname "$PWD"))/\[$BOLD\]$(basename "$PWD")"
+	echo "\[$STATUS_COLOR\]─\[$RESET\]\[$STATUS_COLOR\]░▒▓\[$REVERSE\] ${prompt_path} \[$RESET\]\[$STATUS_COLOR\]▓▒░\[${STATUS_COLOR}\] ▷\[${RESET}\] "
 }
 
 function prompt-right {
@@ -101,10 +109,10 @@ function prompt-right {
 		git_staged_count=$(git diff --cached --numstat | wc -l)
 		git_unstaged_count=$(git diff --numstat | wc -l)
 		git_rev_number=$(git rev-list --count HEAD)
-		scm_summary="$RESET$PURPLE_DK⟜$PURPLE$BOLD${git_branch_current}$RESET$PURPLE_DK⋲ $PURPLE${git_branch_count} $(scm-type)R$PURPLE_LT${git_rev_number}$BOLD+${git_unstaged_count}$RESET$PURPLE+${git_staged_count}$PURPLE_DK$RESET"
+		scm_summary="\[$RESET\]\[$PURPLE_DK\]⟜\[$PURPLE\]\[$BOLD\]${git_branch_current}\[$RESET\]\[$PURPLE_DK\]⋲ \[$PURPLE\]${git_branch_count} $(scm-type)R\[$PURPLE_LT\]${git_rev_number}\[$BOLD\]+${git_unstaged_count}\[$RESET\]\[$PURPLE\]+${git_staged_count}\[$PURPLE_DK\]\[$RESET\]"
 	fi
 	if [ -n "$APPENV_STATUS" ] || [ -e ".appenv" ]; then
-		appenv_status=" $GOLD_DK$(if [ -e ".appenv" ]; then echo "▶"; else echo "▷"; fi)$GOLD$APPENV_STATUS$GOLD_DK "
+		appenv_status=" \[$GOLD_DK\]$(if [ -e ".appenv" ]; then echo "▶"; else echo "▷"; fi)\[$GOLD\]$APPENV_STATUS\[$GOLD_DK\] "
 	fi
 	# Warnings
 	# This is the disk capacity in %
@@ -114,8 +122,10 @@ function prompt-right {
 	# FROM: https://stackoverflow.com/questions/9229333/how-to-get-overall-cpu-usage-e-g-57-on-linux#9229580
 	# NOTE: I tried different options and used the one that's the fastest. We don't
 	# want thr prompt to take too long.
-	stat_cpu_usage=$(mpstat | awk '$12 ~ /[0-9.]+/ { print 100 - $12"%" }')
-	echo "${scm_summary}${appenv_status}$PURPLE_DK⛬ ${process_count} ○$(date '+%T')$PURPLE${session_type}$RESET"
+	if [ ! -z "$HAS_MPSTAT" ]; then
+		stat_cpu_usage=$(mpstat | awk '$12 ~ /[0-9.]+/ { print 100 - $12"%" }')
+	fi
+	echo "${scm_summary}${appenv_status}\[$PURPLE_DK\]⛬ ${process_count} ○$(date '+%T')\[$PURPLE\]${session_type}\[$RESET\]"
 }
 
 
@@ -124,16 +134,16 @@ if [ -z "$SHELL_TYPE" ] || [[ "$SHELL_TYPE" == "bash" ]]; then
 		prompt-setup
 		prompt_left="$(prompt-left)"
 		prompt_right="$(prompt-right)"
-		# prompt_left_noctrl=$(strip-ansi "$prompt_left")
-		# prompt_right_noctrl=$(strip-ansi "$prompt_right")
-		# prompt_right_padded=$(printf "%$(($COLUMNS-${#prompt_right_noctrl}))s%s" "" "$prompt_right")
-		echo "${prompt_right}"
-		echo "${prompt_left}"
+		prompt_left_noctrl=$(strip-prompt "$prompt_left")
+		prompt_right_noctrl=$(strip-prompt "$prompt_right")
+		prompt_right_len="${#prompt_right_noctrl}"
+		# NOTE: Not sure why we have a manual correction, but here we go
+		prompt_right_padded=$(printf "%$(($COLUMNS-${#prompt_right_noctrl}+3))s%s" "" "$prompt_right")
+		PS1="$prompt_right_padded\n$prompt_left"
+		export prompt_right_noctrl
 	}
-	# NOTE: I can't get the wrapping to work properly, we need the
-	# [ and ] to get the line count right.
-	PS1="$CYAN$(prompt)$RESET"
-	export PS1
+	export PROMPT_COMMAND=prompt
+	# export PS1
 fi
 
 # EOF

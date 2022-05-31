@@ -143,7 +143,6 @@ if [ -z "$SHELL_TYPE" ] || [[ "$SHELL_TYPE" == "bash" ]]; then
 		export prompt_right_noctrl
 	}
 	export PROMPT_COMMAND=prompt
-	# export PS1
 fi
 
 # EOF

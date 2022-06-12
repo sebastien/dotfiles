@@ -129,7 +129,7 @@ function prompt-right {
 	if [ ! -z "$HAS_MPSTAT" ]; then
 		stat_cpu_usage=$(mpstat | awk '$12 ~ /[0-9.]+/ { print 100 - $12"%" }')
 	fi
-	echo "${scm_summary}${appenv_status}\[$PURPLE_DK\]⛬ ${process_count} ○$(date '+%T')\[$PURPLE\]${session_type}\[$RESET\]"
+	echo "${appenv_status}${scm_summary}\[$PURPLE_DK\]⛬ ${process_count} ○$(date '+%T')\[$PURPLE\]${session_type}\[$RESET\]"
 }
 
 

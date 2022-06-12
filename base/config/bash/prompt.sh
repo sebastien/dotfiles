@@ -82,6 +82,10 @@ function scm-type {
 function prompt-setup {
 	STATUS_COLOR=$(if [[ $? == 0 ]]; then echo -n "${BLUE}"; else echo -n "${RED}"; fi)
 	export STATUS_COLOR
+	# We change the current directory
+	if declare -f -F cd-prompt-helper > /dev/null;  then
+		cd-prompt-helper
+	fi
 }
 
 function prompt-left {
@@ -131,6 +135,8 @@ function prompt-right {
 
 if [ -z "$SHELL_TYPE" ] || [[ "$SHELL_TYPE" == "bash" ]]; then
 	function prompt() {
+		# If we have cd-store, we call it
+
 		prompt-setup
 		prompt_left="$(prompt-left)"
 		prompt_right="$(prompt-right)"
@@ -139,8 +145,8 @@ if [ -z "$SHELL_TYPE" ] || [[ "$SHELL_TYPE" == "bash" ]]; then
 		prompt_right_len="${#prompt_right_noctrl}"
 		# NOTE: Not sure why we have a manual correction, but here we go
 		prompt_right_padded=$(printf "%$(($COLUMNS-${#prompt_right_noctrl}+3))s%s" "" "$prompt_right")
+
 		PS1="$prompt_right_padded\n$prompt_left"
-		export prompt_right_noctrl
 	}
 	export PROMPT_COMMAND=prompt
 fi

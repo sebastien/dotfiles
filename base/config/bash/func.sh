@@ -18,6 +18,29 @@ function tat {
 
 
 # --
+# Kills the process with the given name
+function pl {
+	if [ -z "$1" ]; then
+		echo "Need to give a query string to lookup corresponding processes"
+	else
+		ps aux | grep $1 | grep -v grep
+	fi
+
+}
+function kl {
+	if [ -z "$1" ]; then
+		echo "Need to give a query string to lookup corresponding processes"
+	else
+		for pid in $(ps aux | grep $1 | grep -v grep | awk '{print $2}'); do
+			echo "Killing $pid"
+			kill -9 $pid
+		done
+		ps aux | grep $1 | grep -v grep
+	fi
+
+}
+
+# --
 # Allows to store and restore paths
 CD_STORE_PATH=$HOME/.cache/bash
 CD_LAST=

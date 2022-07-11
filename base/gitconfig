@@ -13,6 +13,8 @@
 	st = status
 	tip = rev-parse HEAD
 	pr = pull --recurse-submodules
+	# Checkout submodules
+	sco = submodule update --init --recursive
 	supr = submodule update --remote
 	sup = submodule update
 	sin = submodule init

@@ -11,6 +11,7 @@ alias open="gnome-open"
 alias realias="source $HOME/.config/bash/aliases.sh"
 alias jsonpp="python3 -m json.tool"
 alias mdless="pandoc -s -f markdown -t html \!* | w3m -dump -T text/html"
+alias z="cd-search"
 
 # --
 # Kills the given process, found by grepping the command name

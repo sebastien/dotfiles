@@ -108,4 +108,17 @@ function cd-log {
 	fi
 }
 
+# --
+# `cd-search QUERY?` searches through the log of directories
+function cd-search {
+	local selection="$(tac $CD_STORE_PATH/cdstore.log | cut -d'|' -f3 | sort | uniq | tac | fzf --query="$1" --select-1 --exit-0)"
+	if [ ! -z "$selection" ]; then
+		if [ -d "$selection" ]; then
+			cd "$selection"
+		elif [ -e "$selection" ]; then
+			$EDITOR "$selection"
+		fi
+	fi
+}
+
 # EOF

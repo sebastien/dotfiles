@@ -6,6 +6,6 @@ fi
 
 # If we have git-town, we install the completions
 if which git-town &> /dev/null; then
-	source <(git-town completions zsh)
+	source <(git-town completions bash)
 fi
 # EOF

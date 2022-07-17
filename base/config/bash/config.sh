@@ -4,7 +4,6 @@ set -o vi
 shopt -s extglob
 shopt -s checkwinsize
 
-
 # Nicer shell experience
 # FROM <https://opensource.com/article/20/3/fish-shell>
 export GREP_OPTIONS="--color=auto"; # make grep colorful
@@ -35,7 +34,8 @@ load-source "$BASH_BASE/func.sh"
 load-source "$BASH_BASE/fzf.sh"
 load-source "$HOME/.cargo/env"
 load-source "$HOME/.local/bin/appenv.bash"
-load-source "$HOME/.local/src/z/z.sh"
+# NOTE: Not using z anymore
+# load-source "$HOME/.local/src/z/z.sh"
 # load-source "$HOME/Workspace/Community/appenv/bin/appenv.bash" silent
 load-source "$HOME/.nix-profile/etc/profile.d/nix.sh" silent
 # We need to that later on

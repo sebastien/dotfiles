@@ -30,3 +30,5 @@
 	prune = true
 [submodule]
 	recurse = true
+[push]
+	autoSetupRemote = true

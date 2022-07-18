@@ -111,13 +111,17 @@ function cd-log {
 # --
 # `cd-search QUERY?` searches through the log of directories
 function cd-search {
-	local selection="$(tac $CD_STORE_PATH/cdstore.log | cut -d'|' -f3 | sort | uniq | tac | fzf --query="$1" --select-1 --exit-0)"
+	local selection="$(tac $CD_STORE_PATH/cdstore.log | cut -d'|' -f3 | sort | uniq | fzf --query="$1" --select-1 --exit-0)"
 	if [ ! -z "$selection" ]; then
 		if [ -d "$selection" ]; then
 			cd "$selection"
 		elif [ -e "$selection" ]; then
 			$EDITOR "$selection"
+		else
+			echo "-!- Selected path does not exist anymore: $selection"
 		fi
+	else
+		echo "-!- Could not find any match for: $selection"
 	fi
 }
 

@@ -125,8 +125,4 @@ function cd-search {
 	fi
 }
 
-function nota-edit {
-	local query="$1"
-	$EDITOR "$(find ~/.nota -name "*.?d" | fzf --query="$query" --select-1 --exit-0)"
-}
 # EOF

@@ -125,4 +125,17 @@ function cd-search {
 	fi
 }
 
+# function cd-prune {
+# 	local path
+# 	IFS=`\n`
+# 	local tmp=$(mktemp)
+# 	for line in $(cat $CD_STORE_PATH/cdstore.log); do
+# 		path="$(echo $line | cut -d'|' -f3)"
+# 		if [ -e "$path" ]; then
+# 			echo "$line" >> "$tmp"
+# 		fi
+# 	done
+# 	mv "$tmp" "$CD_STORE_PATH/cdstore.log"
+# }
+
 # EOF

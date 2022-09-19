@@ -1,0 +1,59 @@
+#!/usr/bin/env python
+from typing import Iterator, Optional, NamedTuple
+import subprocess
+from datetime import datetime
+import re
+import time
+
+
+RE_COMMIT = re.compile(
+    "^commit (" + ("[a-f0-9]" * len("f8b8b14eb7a9c82fe1bb5e863e76056f5babe4a5")) + ")$"
+)
+RE_META = re.compile("(?P<key>[A-Z][a-z0-9]+(-([A-Z][a-z0-9]+))*): (?P<value>.*)$")
+
+
+def git_log() -> Iterator[str]:
+    res = subprocess.run(
+        ["git", "log", "--all"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    if res.returncode != 0:
+        raise RuntimeError(f"Git log error: {res.stderr}")
+    for line in str(res.stdout, "utf8").split("\n"):
+        yield line
+
+
+class Commit(NamedTuple):
+    id: str
+    author: str
+    date: datetime
+
+
+def git_commits():
+    lines = git_log()
+    try:
+        while True:
+            line = next(lines)
+            if match := RE_COMMIT.match(line):
+                cid: str = match.group(1)
+                author: Optional[str] = None
+                date: Optional[datetime] = None
+                while match := RE_META.match(next(lines)):
+                    key = match.group("key").lower()
+                    value = match.group("value")
+                    if key == "author":
+                        author = value.split("<")[0].strip()
+                    elif key == "date":
+                        date = datetime.strptime(value.strip(), "%c %z")
+                    else:
+                        pass
+                assert author
+                assert date
+                yield Commit(cid, author, date)
+    except StopIteration:
+        pass
+
+
+for commit in git_commits():
+    print(",".join(str(_) for _ in commit))

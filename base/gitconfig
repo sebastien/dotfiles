@@ -6,6 +6,7 @@
 	rebase  = false
 [alias]
 	ds = diff --staged
+	cr = clone --recursive
 	# https://www.shellhacks.com/git-diff-staged-unstaged-files/
 	d  = status -vv
 	co = checkout

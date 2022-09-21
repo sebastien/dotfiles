@@ -12,3 +12,5 @@ dist
 .secrets
 .secrets.*
 MANIFEST
+node_modules
+gems

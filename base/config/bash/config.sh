@@ -9,18 +9,18 @@ if [ -z "$BASH_CONFIG_LOADED" ]; then
 	#export BASH_CONFIG_LODAED="$(date +"%Y-%m-%dT%H:%M:%S:%3N")"
 	# Nicer shell experience
 	# FROM <https://opensource.com/article/20/3/fish-shell>
-	export GREP_OPTIONS="--color=auto"; # make grep colorful
-	export LSCOLORS=gxfxbEaEBxxEhEhBaDaCaD; # make ls more colorful as well
-	export HISTSIZE=32768; # Larger bash history (allow 32³ entries; default is 500)
-	export HISTFILESIZE=$HISTSIZE;
-	export HISTCONTROL=ignoredups; # Remove duplicates from history. I use `git status` a lot.
-	export HISTIGNORE="ls:cd:cd -:pwd:exit:date:* --help"; # Make some commands not show up in history
-	export LANG="en_US.UTF-8"; # Language formatting is still important
-	export LC_ALL="en_US.UTF-8"; # byte-wise sorting and force language for those pesky apps
-	export MANPAGER="less -X"; # Less is more
-	export CDPATH=$HOME/Workspace:$HOME
+	export GREP_OPTIONS="--color=auto"     # make grep colorful
+	export LSCOLORS=gxfxbEaEBxxEhEhBaDaCaD # make ls more colorful as well
+	export HISTSIZE=32768                  # Larger bash history (allow 32³ entries; default is 500)
+	export HISTFILESIZE=$HISTSIZE
+	export HISTCONTROL=ignoredups                         # Remove duplicates from history. I use `git status` a lot.
+	export HISTIGNORE="ls:cd:cd -:pwd:exit:date:* --help" # Make some commands not show up in history
+	export LANG="en_US.UTF-8"                             # Language formatting is still important
+	export LC_ALL="en_US.UTF-8"                           # byte-wise sorting and force language for those pesky apps
+	export MANPAGER="less -X"                             # Less is more
+	export CDPATH=.:$HOME/Workspace:$HOME
 
-	function load-source () {
+	function load-source() {
 		if [ -e "$1" ]; then
 			source "$1"
 		elif [ -z "$2" ]; then
@@ -51,7 +51,7 @@ if [ -z "$BASH_CONFIG_LOADED" ]; then
 		load-source "$completion"
 	done
 
-	if [ -s "$(which direnv 2> /dev/null)" ]; then eval "$(direnv hook bash)"; fi
+	if [ -s "$(which direnv 2>/dev/null)" ]; then eval "$(direnv hook bash)"; fi
 
 fi
 

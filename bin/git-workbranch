@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+# --
+# Checks out a worktree branch
+function git-workbranch-create {
+	local BRANCH="$1"
+	local REPO_NAME="$(basename $(git rev-parse --show-toplevel) | sed 's|--.*||g')"
+	local REPO_BRANCHES="$(git branch -a | grep -v 'HEAD' | sed 's|remotes/origin/||g;s|[+* ]||g')"
+	local MATCHING_BRANCHES
+	if [ -z "$BRANCH" ]; then
+		MATCHING_BRANCHES="$REPO_BRANCHES"
+	else
+		MATCHING_BRANCH="$(echo "$REPO_BRANCHES" | grep "$BRANCH")"
+	fi
+	if [ -z "$MATCHING_BRANCH" ]; then
+		echo "ERR - Could not find branch: $BRANCH"
+		exit 1
+	elif [ "$(echo "$MATCHING_BRANCH" | wc -l)" != "1" ]; then
+		MATCHING_BRANCH="$(echo "$MATCHING_BRANCH" | fzf)"
+	fi
+	local BRANCH_PATH="$(git rev-parse --show-toplevel)/../$REPO_NAME--$MATCHING_BRANCH"
+	if [ -e "$BRANCH_PATH" ]; then
+		echo "--- Worktree already exists: $BRANCH_PATH"
+	else
+		git worktree add -b "$MATCHING_BRANCH" "$BRANCH_PATH"
+	fi
+}
+
+git-workbranch-create "$@"
+
+# EOF

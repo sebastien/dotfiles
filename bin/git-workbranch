@@ -1,31 +1,69 @@
 #!/usr/bin/env bash
 
+function git-pick-branch {
+	local BRANCH="$1"
+	local REPO_BRANCHES="$(git branch -a | grep -v 'HEAD' | sed 's|remotes/origin/||g;s|[+* ]||g')"
+	local MATCHING_BRANCH
+	if [ -z "$BRANCH" ]; then
+		MATCHING_BRANCH="$REPO_BRANCHES"
+	else
+		MATCHING_BRANCH="$(echo "$REPO_BRANCHES" | grep "$BRANCH")"
+	fi
+	if [ -z "$MATCHING_BRANCH" ]; then
+		echo "ERR - Could not find branch: '$BRANCH'"
+		exit 1
+	elif [ "$(echo "$MATCHING_BRANCH" | wc -l)" != "1" ]; then
+		MATCHING_BRANCH="$(echo "$MATCHING_BRANCH" | fzf)"
+	fi
+	echo -n "$MATCHING_BRANCH"
+}
+
 # --
 # Checks out a worktree branch
 function git-workbranch-create {
 	local BRANCH="$1"
 	local REPO_NAME="$(basename $(git rev-parse --show-toplevel) | sed 's|--.*||g')"
-	local REPO_BRANCHES="$(git branch -a | grep -v 'HEAD' | sed 's|remotes/origin/||g;s|[+* ]||g')"
-	local MATCHING_BRANCHES
-	if [ -z "$BRANCH" ]; then
-		MATCHING_BRANCHES="$REPO_BRANCHES"
-	else
-		MATCHING_BRANCH="$(echo "$REPO_BRANCHES" | grep "$BRANCH")"
-	fi
-	if [ -z "$MATCHING_BRANCH" ]; then
-		echo "ERR - Could not find branch: $BRANCH"
+	local MATCHING_BRANCH
+	if ! MATCHING_BRANCH="$(git-pick-branch "$BRANCH")"; then
+		echo $MATCHING_BRANCH
 		exit 1
-	elif [ "$(echo "$MATCHING_BRANCH" | wc -l)" != "1" ]; then
-		MATCHING_BRANCH="$(echo "$MATCHING_BRANCH" | fzf)"
 	fi
 	local BRANCH_PATH="$(git rev-parse --show-toplevel)/../$REPO_NAME--$MATCHING_BRANCH"
+
 	if [ -e "$BRANCH_PATH" ]; then
 		echo "--- Worktree already exists: $BRANCH_PATH"
 	else
 		git worktree add -b "$MATCHING_BRANCH" "$BRANCH_PATH"
+		git -C "$BRANCH_PATH" branch --set-upstream-to=origin/$MATCHING_BRANCH $MATCHING_BRANCH
+		echo "--- Worktree created at: $BRANCH_PATH"
 	fi
 }
 
-git-workbranch-create "$@"
+function git-workbranch-remove {
+	local BRANCH="$1"
+	local MATCHING_BRANCH
+	if [ -z "$1" ]; then
+		BRANCH="$(git branch --show-current)"
+	fi
+	if ! MATCHING_BRANCH="$(git-pick-branch "$BRANCH")"; then
+		echo $MATCHING_BRANCH
+		exit 1
+	fi
+	echo "git worktree remove $MATCHING_BRANCH"
+}
+
+case "$1" in
+add)
+	shift
+	git-workbranch-create "$@"
+	;;
+remove)
+	shift
+	git-workbranch-remove "$@"
+	;;
+*)
+	git-workbranch-create "$@"
+	;;
+esac
 
 # EOF

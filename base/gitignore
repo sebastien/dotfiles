@@ -1,5 +1,6 @@
 .pyre
 .circleci/update_check.yml
+.circleci/cli.yml
 *.pyc
 *.egg-info
 *.cache

@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 
+# --
+# # Git Workbranch
+#
+# `git-workbranch` is a CLI tool that makes
 function git-pick-branch {
 	local BRANCH="$1"
-	local REPO_BRANCHES="$(git branch -a | grep -v 'HEAD' | sed 's|remotes/origin/||g;s|[+* ]||g')"
+	local REPO_BRANCHES="$(git branch -a | grep -v 'HEAD' | sed 's|remotes/origin/||g;s|[+* ]||g' | sort | uniq)"
 	local MATCHING_BRANCH
 	if [ -z "$BRANCH" ]; then
 		MATCHING_BRANCH="$REPO_BRANCHES"
@@ -20,7 +24,7 @@ function git-pick-branch {
 
 # --
 # Checks out a worktree branch
-function git-workbranch-create {
+function git-workbranch-checkout {
 	local BRANCH="$1"
 	local REPO_NAME="$(basename $(git rev-parse --show-toplevel) | sed 's|--.*||g')"
 	local MATCHING_BRANCH
@@ -29,13 +33,44 @@ function git-workbranch-create {
 		exit 1
 	fi
 	local BRANCH_PATH="$(git rev-parse --show-toplevel)/../$REPO_NAME--$MATCHING_BRANCH"
-
+	echo "--- Selected branch: $MATCHING_BRANCH at '$(realpath --relative-to="$PWD" $BRANCH_PATH)'"
 	if [ -e "$BRANCH_PATH" ]; then
-		echo "--- Worktree already exists: $BRANCH_PATH"
+		echo "--- Worktree already exists: $(realpath --relative-to="$PWD" $BRANCH_PATH)"
 	else
-		git worktree add -b "$MATCHING_BRANCH" "$BRANCH_PATH"
+		git worktree add "$BRANCH_PATH" "$MATCHING_BRANCH"
 		git -C "$BRANCH_PATH" branch --set-upstream-to=origin/$MATCHING_BRANCH $MATCHING_BRANCH
-		echo "--- Worktree created at: $BRANCH_PATH"
+		echo "--- Worktree created at: $(realpath --relative-to="$PWD" $BRANCH_PATH)"
+	fi
+}
+
+function git-workbranch-list {
+	local BRANCH="$1"
+	local REPO_BRANCHES="$(git branch -a | grep -v 'HEAD' | sed 's|remotes/origin/||g;s|[+* ]||g' | sort | uniq)"
+	local REPO_NAME="$(basename $(git rev-parse --show-toplevel) | sed 's|--.*||g')"
+	local branch
+	local branch_path
+	local base_path="$(git rev-parse --show-toplevel)/.."
+	local checked_branches
+	local unchecked_branches
+	for branch in $REPO_BRANCHES; do
+		branch_path="$(realpath --relative-to="$PWD" "$base_path/$REPO_NAME--$branch")"
+		if [ -e "$branch_path" ]; then
+			checked_branches+="$branch→$branch_path "
+		else
+			unchecked_branches+="$branch "
+		fi
+	done
+	if [ -n "$checked_branches" ]; then
+		echo "Checked out branches:"
+		for branch in $checked_branches; do
+			echo " - $branch"
+		done
+	fi
+	if [ -n "$unchecked_branches" ]; then
+		echo "Unchecked out branches:"
+		for branch in $unchecked_branches; do
+			echo " - $branch"
+		done
 	fi
 }
 
@@ -53,16 +88,20 @@ function git-workbranch-remove {
 }
 
 case "$1" in
-add)
+checkout)
 	shift
-	git-workbranch-create "$@"
+	git-workbranch-checkout "$@"
 	;;
 remove)
 	shift
 	git-workbranch-remove "$@"
 	;;
+list)
+	shift
+	git-workbranch-list "$@"
+	;;
 *)
-	git-workbranch-create "$@"
+	git-workbranch-checkout "$@"
 	;;
 esac
 

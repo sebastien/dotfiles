@@ -8,7 +8,8 @@
 *.swp
 .mypy_cache
 __pycache__
-.deps
+.deps/run
+.deps/bin
 build
 dist
 .secrets

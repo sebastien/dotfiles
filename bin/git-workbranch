@@ -22,6 +22,25 @@ function git-pick-branch {
 	echo -n "$MATCHING_BRANCH"
 }
 
+function git-workbranch-create {
+	local BRANCH="$1"
+	local REPO_NAME="$(basename $(git rev-parse --show-toplevel) | sed 's|--.*||g')"
+	local BRANCH_EXISTS="$(git branch -a | grep -v 'HEAD' | sed 's|remotes/origin/||g;s|[+* ]||g' | sort | uniq | grep "$BRANCH")"
+	local BRANCH_PATH
+	if [ -n "$BRANCH_EXISTS" ]; then
+		echo "ERR - Branch name is too ambiguous, matching branches are:"
+		echo "$BRANCH_EXISTS"
+	else
+		BRANCH_PATH="$(git rev-parse --show-toplevel)/../$REPO_NAME--$BRANCH"
+		if [ -e "$BRANCH_PATH" ]; then
+			echo "--- Worktree already exists: $(realpath --relative-to="$PWD" $BRANCH_PATH)"
+		else
+			echo "--- Creating new branch $BRANCH: $(realpath --relative-to="$PWD" $BRANCH_PATH)"
+			git worktree add -b "$BRANCH" "$BRANCH_PATH"
+		fi
+	fi
+}
+
 # --
 # Checks out a worktree branch
 function git-workbranch-checkout {
@@ -88,6 +107,10 @@ function git-workbranch-remove {
 }
 
 case "$1" in
+create)
+	shift
+	git-workbranch-create "$@"
+	;;
 checkout)
 	shift
 	git-workbranch-checkout "$@"
@@ -101,7 +124,11 @@ list)
 	git-workbranch-list "$@"
 	;;
 *)
-	git-workbranch-checkout "$@"
+	echo "git-workbranch available commands:"
+	echo " - create BRANCH_NAME:   Creates a new branch worktree"
+	echo " - checkout BRANCH_NAME: Checks out a new branch worktree"
+	echo " - remove [BRANCH_NAME]: Remove the current or given branch worktree"
+	echo " - list:                 List the checked out worktree branches"
 	;;
 esac
 

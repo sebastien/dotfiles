@@ -1,4 +1,4 @@
-tBASH_BASE=$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")
+BASH_BASE=$(readlink -f "$(dirname "${BASH_SOURCE[0]}")")
 
 set -o vi
 shopt -s extglob

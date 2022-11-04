@@ -33,3 +33,5 @@
 	recurse = true
 [push]
 	autoSetupRemote = true
+[credential]
+	helper = store

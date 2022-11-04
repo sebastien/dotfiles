@@ -31,7 +31,7 @@ load-source "$BASH_BASE/setup.sh"
 load-source "$BASH_BASE/aliases.sh"
 load-source "$BASH_BASE/env.sh"
 load-source "$BASH_BASE/func.sh"
-load-source "$BASH_BASE/fzf.sh"
+load-source "$BASH_BASE/cuda.sh"
 load-source "$HOME/.cargo/env"
 load-source "$HOME/.local/bin/appenv.bash"
 # NOTE: Not using z anymore

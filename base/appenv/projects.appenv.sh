@@ -1,5 +1,5 @@
 appenv_declare projects
-PROJECTS_DIR="$HOME/Workspace $HOME/Workspace/Community"
+PROJECTS_DIR="$HOME/Workspace"
 PROJECTS="cuisine retro reporter cells sink texto snap macme multiplex sdoc smalldoc shared-secrets"
 for project in $PROJECTS; do
 	for parent in $PROJECTS_DIR; do

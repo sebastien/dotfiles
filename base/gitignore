@@ -1,4 +1,6 @@
 .pyre
+.circleci/update_check.yml
+.circleci/cli.yml
 *.pyc
 *.egg-info
 *.cache
@@ -6,9 +8,12 @@
 *.swp
 .mypy_cache
 __pycache__
-.deps
+.deps/run
+.deps/bin
 build
 dist
 .secrets
 .secrets.*
 MANIFEST
+node_modules
+gems

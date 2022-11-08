@@ -20,6 +20,7 @@ if [ -z "$BASH_CONFIG_LOADED" ]; then
 	export MANPAGER="less -X"                             # Less is more
 	export CDPATH=.:$HOME/Workspace:$HOME
 
+
 	function load-source() {
 		if [ -e "$1" ]; then
 			source "$1"

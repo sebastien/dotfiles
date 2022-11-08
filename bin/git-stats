@@ -1,0 +1,149 @@
+#!/usr/bin/env python
+import re
+from subprocess import Popen, PIPE
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from math import floor
+from typing import Optional, Iterator
+
+RE_COMMIT = re.compile(r"^commit (?P<hash>[0-9a-f]+)")
+RE_ATTRIBUTE = re.compile(r"^(?P<key>[A-Za-z]+):[ ]+(?P<value>.*)$")
+RE_STAT = re.compile(r"(?P<path>[^\|]+)\|[ ]+(?P<count>\d+) (?P<ops>.+)$")
+LOCAL_TIMEZONE = datetime.now(timezone.utc).astimezone().tzinfo
+
+
+@dataclass
+class Commit:
+    hash: str
+    author: str
+    date: datetime
+    summary: str
+    changes: int
+    paths: set[str]
+
+
+def git_log(path: str = ".") -> Iterator[Commit]:
+    """Creates a stream of commits directly read from the git command"""
+    p = Popen(
+        [
+            "git",
+            "-C",
+            path,
+            "log",
+            "--stat",
+            "--all",
+            "--date=iso-strict",
+        ],
+        stdout=PIPE,
+        env={"GIT_PAGER": "cat"},
+    )
+    commit_hash: Optional[str] = None
+    commit_author: Optional[str] = None
+    commit_date: Optional[datetime] = None
+    commit_summary: Optional[str] = None
+    commit_changes: int = 0
+    commit_sep: int = 0
+    commit_paths: set[str] = set()
+    if p.stdout:
+        for line in (str(_, "utf8") for _ in p.stdout):
+            if m := RE_COMMIT.match(line):
+                if commit_hash is not None:
+                    assert commit_author is not None
+                    assert commit_date is not None
+                    assert commit_summary is not None
+                    yield Commit(
+                        hash=commit_hash,
+                        author=commit_author,
+                        date=commit_date,
+                        summary=commit_summary,
+                        changes=commit_changes,
+                        paths=commit_paths,
+                    )
+                commit_hash = m.group("hash")
+                commit_author = None
+                commit_date = None
+                commit_summary = None
+                commit_changes = 0
+                commit_sep = 0
+                commit_paths = set()
+            elif m := RE_ATTRIBUTE.match(line):
+                name = m.group(1)
+                value = m.group(2)
+                match name:
+                    case "Date":
+                        commit_date = datetime.fromisoformat(value).astimezone(
+                            LOCAL_TIMEZONE
+                        )
+                    case "Author":
+                        commit_author = value.split("<", 1)[0].strip()
+            elif m := RE_STAT.match(line):
+                commit_changes += int(m.group("count"))
+                commit_paths.add(m.group("path").strip())
+            elif line == "\n":
+                commit_sep += 1
+            elif commit_sep == 1:
+                commit_summary = (
+                    line.strip()
+                    if not commit_summary
+                    else f"{commit_summary} {line.strip()}"
+                )
+            else:
+                # TODO: '3 files changed, 28738 insertions(+)'
+                pass
+
+        if commit_hash is not None:
+            assert commit_author is not None
+            assert commit_date is not None
+            assert commit_summary is not None
+            yield Commit(
+                hash=commit_hash,
+                author=commit_author,
+                date=commit_date,
+                summary=commit_summary,
+                changes=commit_changes,
+                paths=commit_paths,
+            )
+
+
+WEEKDAYS = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+]
+
+
+def report_by_author(stream: Iterator[Commit]):
+    res: dict[str, dict[int, list[Commit]]] = {}
+    now = datetime.now(LOCAL_TIMEZONE)
+    for commit in stream:
+        by_week = res.setdefault(commit.author, {})
+        week_since = floor(((now - commit.date).days - now.weekday()) / 7) + 1
+        by_week.setdefault(week_since, []).append(commit)
+    for user in sorted(res):
+        print(f"For user: {user}")
+        for week in sorted(weeks := res[user]):
+            if week == 0:
+                print(f"  This week:")
+            elif week == 1:
+                print(f"  Last week:")
+            else:
+                print(f"  {week:2d} weeks ago:")
+            by_weekday: dict[int, list[Commit]] = {}
+            for commit in weeks[week]:
+                by_weekday.setdefault(commit.date.weekday(), []).append(commit)
+            for weekday, commits in by_weekday.items():
+                print(f"     {WEEKDAYS[weekday]}:")
+                for commit in commits:
+                    print(
+                        f"       [{commit.date}] [+{commit.changes:6d}] {commit.summary} | {commit.hash}"
+                    )
+
+
+if __name__ == "__main__":
+    report_by_author(git_log())
+
+# EOFgg

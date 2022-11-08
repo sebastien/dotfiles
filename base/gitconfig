@@ -5,6 +5,7 @@
 	# SEE: https://stackoverflow.com/questions/2472254/when-should-i-use-git-pull-rebase
 	rebase  = false
 [alias]
+	lua = log --all --author
 	ds = diff --staged
 	cr = clone --recursive
 	# https://www.shellhacks.com/git-diff-staged-unstaged-files/

@@ -3,7 +3,26 @@
 # --
 # # Git Workbranch
 #
-# `git-workbranch` is a CLI tool that makes
+# `git-workbranch` is a CLI tool that makes it easier to work with branches
+# and worktrees.
+#
+# The typical workflow is like so:
+#
+# ```
+# $ cd my-repo
+# $ git-workbranch ls
+# Unchecked out branches:
+#  - main
+#  - branch-A
+#  - branch-B
+# $ git-workbranch co branch-A
+# --- Selected branch: branch-a at '../my-repo--branch-a'
+# Preparing worktree (new branch 'my-repo-branch-a')
+# branch 'my-repo-branch-a' set up to track 'origin/my-repo-branch-a'.
+# HEAD is now at ccd43e6 commit description
+# branch 'my-repo-branch-a' set up to track 'origin/branch-a'.
+# --- Worktree created at: ../my-repo--branch-a
+# ``````
 function git-pick-branch {
 	local BRANCH="$1"
 	local REPO_BRANCHES="$(git branch -a | grep -v 'HEAD' | sed 's|remotes/origin/||g;s|[+* ]||g' | sort | uniq)"
@@ -107,19 +126,19 @@ function git-workbranch-remove {
 }
 
 case "$1" in
-create)
+new | create)
 	shift
 	git-workbranch-create "$@"
 	;;
-checkout)
+co | checkout)
 	shift
 	git-workbranch-checkout "$@"
 	;;
-remove)
+rm | remove)
 	shift
 	git-workbranch-remove "$@"
 	;;
-list)
+ls | list)
 	shift
 	git-workbranch-list "$@"
 	;;

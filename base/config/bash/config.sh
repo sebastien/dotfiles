@@ -20,7 +20,6 @@ if [ -z "$BASH_CONFIG_LOADED" ]; then
 	export MANPAGER="less -X"                             # Less is more
 	export CDPATH=.:$HOME/Workspace:$HOME
 
-
 	function load-source() {
 		if [ -e "$1" ]; then
 			source "$1"
@@ -36,6 +35,7 @@ if [ -z "$BASH_CONFIG_LOADED" ]; then
 	load-source "$BASH_BASE/aliases.sh"
 	load-source "$BASH_BASE/env.sh"
 	load-source "$BASH_BASE/func.sh"
+	load-source "$BASH_BASE/cd-search.sh"
 	load-source "$BASH_BASE/fzf.sh"
 	load-source "$HOME/.cargo/env" skip
 	load-source "$HOME/.local/bin/appenv.bash"

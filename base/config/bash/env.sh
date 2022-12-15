@@ -7,5 +7,5 @@ export NODE_PATH="$NPM_PACKAGES/lib/node_modules:$NODE_PATH"
 export DENO_INSTALL="$HOME/.deno"
 export BUN_INSTALL="$HOME/.bun"
 export SINK_DIFF="nvim -d"
-export PATH="$DENO_INSTALL/bin:$GOPATH/bin:$NPM_PACKAGES/bin/:$HOME/.cargo/bin:$BUN_INSTALL/bin:$PATH"
+export PATH="$DENO_INSTALL/bin:$GOPATH/bin:$NPM_PACKAGES/bin/:$HOME/.cargo/bin:$BUN_INSTALL/bin:$HOME/.codon/bin:$PATH"
 # EOF

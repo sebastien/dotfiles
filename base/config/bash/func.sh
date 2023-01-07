@@ -16,6 +16,10 @@ function tat {
 	fi
 }
 
+function tnew {
+	tmux new -t "$1"
+}
+
 # --
 # Kills the process with the given name
 function pl {

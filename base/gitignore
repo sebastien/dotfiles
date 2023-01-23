@@ -13,6 +13,7 @@ build
 dist
 .secrets
 .secrets.*
+.mypy_cache
 MANIFEST
 node_modules
 gems

@@ -7,7 +7,10 @@
 [alias]
 	lua = log --all --author
 	ds = diff --staged
-	cr = clone --recursive
+	# Recursive clone
+	rc = clone --recurse-submodules
+	# Shallow clone
+	sc = clone --depth=1
 	# https://www.shellhacks.com/git-diff-staged-unstaged-files/
 	d  = status -vv
 	co = checkout

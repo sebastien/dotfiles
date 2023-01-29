@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+GIT_BASE="$(pwd)"
+echo "=== git-for command=\`$@\`"
+for SUBMODULE in $(env -C "$GIT_BASE" find . -name ".git" | sed 's|^./||g'); do
+	if [ "$SUBMODULE" != ".git" ]; then
+		echo "--- repo=$SUBMODULE"
+		echo '```'
+		git -C "$(dirname "$SUBMODULE")" "$@"
+		echo '```'
+	fi
+done
+
+# EOF

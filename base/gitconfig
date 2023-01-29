@@ -17,6 +17,7 @@
 	cm = commit -a
 	st = status
 	tip = rev-parse HEAD
+	cbr = branch --show-current
 	pr = pull --recurse-submodules
 	# Checkout submodules
 	sco = submodule update --init --recursive

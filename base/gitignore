@@ -2,6 +2,7 @@
 .circleci/update_check.yml
 .circleci/cli.yml
 *.pyc
+*.bak
 *.egg-info
 *.cache
 *cache__

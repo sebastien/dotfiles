@@ -3,7 +3,8 @@ import os
 import stat
 import time
 import fnmatch
-from typing import Iterator
+import sys
+from typing import Iterator, Iterable
 
 
 IGNORES: list[str] = [
@@ -31,9 +32,9 @@ def is_ignored(name: str) -> bool:
     return False
 
 
-def catalogue() -> Iterator[tuple[float, str]]:
+def catalogue(path: str) -> Iterator[tuple[float, str]]:
     skipped = set()
-    for dirpath, dirnames, filenames in os.walk("."):
+    for dirpath, dirnames, filenames in os.walk(path):
         if dirpath in skipped:
             for name in dirnames:
                 skipped.add(os.path.join(dirpath, name))
@@ -73,8 +74,19 @@ def since(before: float, now: float) -> str:
     return f"{delta:0.1f} seconds ago"
 
 
-now = time.time()
-for mtime, path in sorted(catalogue()):
-    print(f"{since(mtime, now)}\t{path}")
+def recent(paths: str | Iterable[str], now: float | None = None) -> Iterator[str]:
+    t: float = now or time.time()
+    l: list[tuple[float, str]] = []
+    for _ in (paths,) if isinstance(paths, str) else paths:
+        for _ in catalogue(_):
+            l.append(_)
+    for mtime, path in sorted(l):
+        yield f"{since(mtime, t):20s}{path}"
+
+
+if __name__ == "__main__":
+    for line in recent(sys.argv[1:] or (".",)):
+        sys.stdout.write(line)
+        sys.stdout.write("\n")
 
 # EOF

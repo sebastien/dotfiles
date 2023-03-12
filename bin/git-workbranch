@@ -119,12 +119,50 @@ function git-workbranch-remove {
 		BRANCH="$(git branch --show-current)"
 	fi
 	if ! MATCHING_BRANCH="$(git-pick-branch "$BRANCH")"; then
-		echo $MATCHING_BRANCH
+		echo "$MATCHING_BRANCH"
 		exit 1
 	fi
-	echo "git worktree remove $MATCHING_BRANCH"
+	git worktree remove "$MATCHING_BRANCH"
 }
 
+#
+# TODO: Should merge --squash back to main
+# function git-workbranch-merge {
+# }
+#
+
+function git-workbranch-merge {
+	local changes="$(git-workbranch-util git-has-changes)"
+	if [ -n "$changes" ]; then
+		echo "ERR - Uncommitted local changes, can't close the branch: $changes" >/dev/stderr
+		exit 1
+	fi
+	# TODO: Is that branch already merged with main?
+	# TODO: Did we push that branch? This should be a yes
+	# TODO: Now we go into the main branch and merge this one
+
+}
+
+# -- doc
+# Closes the current branch
+function git-workbranch-close {
+	git-workbranch-merge
+	# TODO: If things succeed, then we can safely remove that branch
+}
+
+function git-workbranch-util {
+	case $1 in
+	git-has-changes)
+		if git status --porcelain | grep 'M '; then
+			echo -n "1"
+		fi
+		;;
+	*)
+		echo "ERR - Unknown utility function: $1" >/dev/stderr
+		exit 1
+		;;
+	esac
+}
 case "$1" in
 new | create)
 	shift
@@ -133,6 +171,10 @@ new | create)
 co | checkout)
 	shift
 	git-workbranch-checkout "$@"
+	;;
+cl | close)
+	shift
+	git-workbranch-close "$@"
 	;;
 rm | remove)
 	shift
@@ -144,10 +186,11 @@ ls | list)
 	;;
 *)
 	echo "git-workbranch available commands:"
-	echo " - create BRANCH_NAME:   Creates a new branch worktree"
-	echo " - checkout BRANCH_NAME: Checks out a new branch worktree"
-	echo " - remove [BRANCH_NAME]: Remove the current or given branch worktree"
-	echo " - list:                 List the checked out worktree branches"
+	echo " - create   BRANCH_NAME:   Creates a new branch worktree"
+	echo " - checkout BRANCH_NAME:   Checks out a new branch worktree"
+	echo " - close    [BRANCH_NAME]: Closed the branch branch worktress and removes it"
+	echo " - remove   [BRANCH_NAME]: Remove the current or given/current branch from the worktree"
+	echo " - list:                   List the checked out worktree branches"
 	;;
 esac
 

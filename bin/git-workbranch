@@ -1,4 +1,17 @@
 #!/usr/bin/env bash
+set -euo pipefail
+
+if [ ! -v NO_COLOR ]; then
+	RED='\033[0;31m'
+	GREEN='\033[0;32m'
+	BLUE='\033[0;34m'
+	ORANGE='\033[0;33m'
+	CYAN='\033[0;36m'
+	GREY='\033[0;37m'
+	LIGHT_GREY='\033[0;97m'
+	RESET='\033[0m'
+	BOLD='\033[1m'
+fi
 
 # --
 # # Git Workbranch
@@ -33,12 +46,30 @@ function git-pick-branch {
 		MATCHING_BRANCH="$(echo "$REPO_BRANCHES" | grep "$BRANCH")"
 	fi
 	if [ -z "$MATCHING_BRANCH" ]; then
-		echo "ERR - Could not find branch: '$BRANCH'"
+		git-workbranch-util err "Could not find branch: '$BRANCH'"
 		exit 1
 	elif [ "$(echo "$MATCHING_BRANCH" | wc -l)" != "1" ]; then
 		MATCHING_BRANCH="$(echo "$MATCHING_BRANCH" | fzf)"
 	fi
 	echo -n "$MATCHING_BRANCH"
+}
+
+# -- doc
+# Returns the name of the current worktree branch
+function git-workbranch-current {
+	local base="$(git rev-parse --show-toplevel)"
+	if [ -e "$base" ]; then
+		git -C "$base" branch --show-current
+	else
+		git-workbranch-util err "Git current base does not exist: base='$base'" >/dev/stderr
+		exit 1
+	fi
+}
+
+# -- doc
+# Returns the name of the parent branch in the worktree
+function git-workbranch-parent {
+	git -C "$(git rev-parse --git-dir | sed 's|/\?\.git.*$||')" branch --show-current
 }
 
 function git-workbranch-create {
@@ -47,14 +78,14 @@ function git-workbranch-create {
 	local BRANCH_EXISTS="$(git branch -a | grep -v 'HEAD' | sed 's|remotes/origin/||g;s|[+* ]||g' | sort | uniq | grep "$BRANCH")"
 	local BRANCH_PATH
 	if [ -n "$BRANCH_EXISTS" ]; then
-		echo "ERR - Branch name is too ambiguous, matching branches are:"
+		git-workbranch-util err "Branch name is too ambiguous, matching branches are:"
 		echo "$BRANCH_EXISTS"
 	else
 		BRANCH_PATH="$(git rev-parse --show-toplevel)/../$REPO_NAME--$BRANCH"
 		if [ -e "$BRANCH_PATH" ]; then
-			echo "--- Worktree already exists: $(realpath --relative-to="$PWD" $BRANCH_PATH)"
+			git-workbranch-util warn "Worktree already exists: $(realpath --relative-to="$PWD" $BRANCH_PATH)"
 		else
-			echo "--- Creating new branch $BRANCH: $(realpath --relative-to="$PWD" $BRANCH_PATH)"
+			git-workbranch-util log "Creating new branch $BRANCH: $(realpath --relative-to="$PWD" $BRANCH_PATH)"
 			git worktree add -b "$BRANCH" "$BRANCH_PATH"
 		fi
 	fi
@@ -81,8 +112,11 @@ function git-workbranch-checkout {
 	fi
 }
 
+# -- doc
+# Lists the different workbranches currently checked out.
 function git-workbranch-list {
-	local BRANCH="$1"
+	local BRANCH
+	if [ -v 1 ]; then BRANCH="$1"; fi
 	local REPO_BRANCHES="$(git branch -a | grep -v 'HEAD' | sed 's|remotes/origin/||g;s|[+* ]||g' | sort | uniq)"
 	local REPO_NAME="$(basename $(git rev-parse --show-toplevel) | sed 's|--.*||g')"
 	local branch
@@ -91,25 +125,64 @@ function git-workbranch-list {
 	local checked_branches
 	local unchecked_branches
 	for branch in $REPO_BRANCHES; do
-		branch_path="$(realpath --relative-to="$PWD" "$base_path/$REPO_NAME--$branch")"
+		branch_path="$base_path/$REPO_NAME--$branch"
 		if [ -e "$branch_path" ]; then
-			checked_branches+="$branch→$branch_path "
+			branch_path="$(realpath --relative-to="$PWD" "$base_path/$REPO_NAME--$branch")"
+		fi
+		if [ -e "$branch_path" ]; then
+			checked_branches+="$GREEN$branch$RESET→$branch_path "
 		else
-			unchecked_branches+="$branch "
+			unchecked_branches+="$BLUE$branch$RESET "
 		fi
 	done
 	if [ -n "$checked_branches" ]; then
 		echo "Checked out branches:"
 		for branch in $checked_branches; do
-			echo " - $branch"
+			echo -e " - $branch"
 		done
 	fi
 	if [ -n "$unchecked_branches" ]; then
 		echo "Unchecked out branches:"
 		for branch in $unchecked_branches; do
-			echo " - $branch"
+			echo -e " - $branch"
 		done
 	fi
+}
+
+# -- doc
+# Displays the status of each workbranch
+function git-workbranch-status {
+	local BRANCH
+	if [ -v 1 ]; then BRANCH="$1"; fi
+	local REPO_BRANCHES="$(git branch -a | grep -v 'HEAD' | sed 's|remotes/origin/||g;s|[+* ]||g' | sort | uniq)"
+	local REPO_NAME="$(basename $(git rev-parse --show-toplevel) | sed 's|--.*||g')"
+	local branch
+	local branch_path
+	local base_path="$(git rev-parse --show-toplevel)/.."
+	local checked_branches
+	local unchecked_branches
+	local cwd="$(pwd)"
+	for branch in $REPO_BRANCHES; do
+		branch_path="$base_path/$REPO_NAME--$branch"
+
+		if [ -e "$branch_path" ]; then
+			cd "$branch_path"
+			local incoming="$(git-workbranch-util has-incoming | wc -l)"
+			local outgoing="$(git-workbranch-util has-outgoing | wc -l)"
+			local archived="$(git tag --points-at | grep archive/$branch | cut -d/ -f2)"
+			local status=
+			if [ -n "$archived" ]; then
+				archived=" $GREEN$BOLD archived$RESET"
+			fi
+			if [ "$incoming" != "0" ]; then incoming="←$incoming"; else incoming="●"; fi
+			if [ "$outgoing" != "0" ]; then outgoing="→$outgoing"; else outgoing="●"; fi
+			if [ "$incoming" = "$outgoing" ] && [ "$incoming" = "●" ]; then
+				status=" $GREEN$BOLD✓ synced$RESET"
+			fi
+			echo -e "$BOLD$(basename $branch_path)$RESET $GREEN$incoming $BLUE$outgoing$RESET$status$archived"
+			cd "$cwd"
+		fi
+	done
 }
 
 function git-workbranch-remove {
@@ -132,9 +205,9 @@ function git-workbranch-remove {
 #
 
 function git-workbranch-merge {
-	local changes="$(git-workbranch-util git-has-changes)"
+	local changes="$(git-workbranch-util has-changes)"
 	if [ -n "$changes" ]; then
-		echo "ERR - Uncommitted local changes, can't close the branch: $changes" >/dev/stderr
+		git-workbranch-util err "Uncommitted local changes, can't close the branch: $changes"
 		exit 1
 	fi
 	# TODO: Is that branch already merged with main?
@@ -146,24 +219,119 @@ function git-workbranch-merge {
 # -- doc
 # Closes the current branch
 function git-workbranch-close {
-	git-workbranch-merge
+	local parent="$(git-workbranch-parent)"
+	local current="$(git-workbranch-current)"
+	if [ -n "$(git-workbranch-util has-changes)" ]; then
+		git-workbranch-util err "Current branch has changes"
+		git status --porcelain
+		git-workbranch-util tip "Run 'git commit -a' to commit outstanding changes"
+		exit 1
+	fi
+	if [ -z "$parent" ]; then
+		git-workbranch-util err "Can't find a parent branch"
+		exit 1
+	fi
+	if [ -z "$current" ]; then
+		git-workbranch-util err "Can't find a current branch"
+		exit 1
+	fi
+	if [ -z "$(git-workbranch-util is-merged)" ]; then
+		git-workbranch-util err "Current branch is not merged in parent"
+		git-workbranch-util tip "Here is the list of differences between $current and $parent"
+		local to_pull="$(GIT_PAGER= git log "$current..$parent" --pretty=format:'%ad %h %d %s' --date=iso)"
+		local to_push="$(GIT_PAGER= git log "$parent..$current" --pretty=format:'%ad %h %d %s' --date=iso)"
+		if [ -n "$to_push" ]; then
+			git-workbranch-util log "Here are changes that need to be pushed to $parent"
+			git-workbranch-util pre "$to_push"
+			local parent_path="$(git worktree list | grep -F "[$parent]" | cut -d' ' -f1)"
+			git-workbranch-util tip "run 'git -C $parent_path merge --squash $current'"
+		fi
+		if [ -n "$to_pull" ]; then
+			git-workbranch-util log "Here are changes that need to be merged from $parent"
+			git-workbranch-util pre "$to_pull"
+			git-workbranch-util tip "run 'git rebase $parent' or 'git merge --squash $parent'"
+		fi
+		local parent="$(git-workbranch-parent)"
+		exit 1
+	fi
+	# git-workbranch-merge
 	# TODO: If things succeed, then we can safely remove that branch
+	git-workbranch-util log "Workbranch $current was merged with $parent, closing…"
+	git tag "archive/$current"
+	git branch --delete --force "$current"
 }
 
 function git-workbranch-util {
+	local parent
+	local current
 	case $1 in
-	git-has-changes)
+	has-changes)
 		if git status --porcelain | grep 'M '; then
 			echo -n "1"
 		fi
 		;;
+	has-incoming)
+		shift
+		if [ -v 1 ]; then parent="$1"; else parent="$(git-workbranch-parent)"; fi
+		if [ -v 2 ]; then current="$2"; else current="$(git-workbranch-current)"; fi
+		GIT_PAGER= git log "$current..$parent" --pretty=format:'%ad %h %d %s' --date=iso
+		;;
+	has-outgoing)
+		shift
+		if [ -v 1 ]; then parent="$1"; else parent="$(git-workbranch-parent)"; fi
+		if [ -v 2 ]; then current="$2"; else current="$(git-workbranch-current)"; fi
+		GIT_PAGER= git log "$parent..$current" --pretty=format:'%ad %h %d %s' --date=iso
+		;;
+	is-merged)
+		local other=""
+		local current=""
+		if [ "$#" -gt 1 ]; then other="$2"; fi
+		if [ "$#" -gt 2 ]; then current="$3"; fi
+		if [ -z "$other" ]; then other="$(git-workbranch-parent)"; fi
+		if [ -z "$current" ]; then current="$(git-workbranch-current)"; fi
+		git branch --merge "$other" | grep "$current"
+		;;
+	err)
+		shift
+		echo -e "$RED$BOLD!!! ERR$RESET$RED" "$@" "$RESET" >/dev/stderr
+		;;
+	warn)
+		shift
+		echo -e "$ORANGE$BOLD-!- WRN$RESET" "$@" "$RESET" >/dev/stderr
+		;;
+	log)
+		shift
+		echo -e "$GREEN... NFO$RESET" "$@" "$RESET" >/dev/stderr
+		;;
+	tip)
+		shift
+		echo -e "$BLUE... TIP" "$@" "$RESET" >/dev/stderr
+		;;
+	pre)
+		shift
+		echo -e "$GREY"'```'
+		echo "$@"
+		echo -e "$GREY"'```'"$RESET"
+		echo
+		;;
+	pre-start)
+		shift
+		echo -e "$GREY"'```'
+		;;
+	pre-end)
+		shift
+		echo ""
+		echo -e "$GREY"'```'"$RESET"
+		;;
 	*)
-		echo "ERR - Unknown utility function: $1" >/dev/stderr
+		git-workbranch-util err "Unknown utility function: $1"
 		exit 1
 		;;
 	esac
 }
-case "$1" in
+command=""
+if [ -v 1 ]; then command="$1"; fi
+case "$command" in
 new | create)
 	shift
 	git-workbranch-create "$@"
@@ -176,7 +344,17 @@ cl | close)
 	shift
 	git-workbranch-close "$@"
 	;;
-rm | remove)
+cu | current)
+	shift
+	git-workbranch-current "$@"
+	;;
+pa | parent)
+	shift
+	git-workbranch-parent "$@"
+	;;
+
+\
+	rm | remove)
 	shift
 	git-workbranch-remove "$@"
 	;;
@@ -184,13 +362,21 @@ ls | list)
 	shift
 	git-workbranch-list "$@"
 	;;
+st | status)
+	shift
+	git-workbranch-status "$@"
+	;;
+
 *)
 	echo "git-workbranch available commands:"
 	echo " - create   BRANCH_NAME:   Creates a new branch worktree"
 	echo " - checkout BRANCH_NAME:   Checks out a new branch worktree"
 	echo " - close    [BRANCH_NAME]: Closed the branch branch worktress and removes it"
 	echo " - remove   [BRANCH_NAME]: Remove the current or given/current branch from the worktree"
+	echo " - current                 Returns the name of the current branch"
+	echo " - parent                  Returns the name of the parent branch"
 	echo " - list:                   List the checked out worktree branches"
+	echo " - status:                 Lists the status of each worktree branch"
 	;;
 esac
 

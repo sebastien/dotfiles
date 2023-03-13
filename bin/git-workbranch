@@ -166,7 +166,6 @@ function git-workbranch-status {
 	local cwd="$(pwd)"
 	for branch in $REPO_BRANCHES; do
 		branch_path="$base_path/$REPO_NAME--$branch"
-
 		if [ -e "$branch_path" ]; then
 			cd "$branch_path"
 			local incoming="$(git-workbranch-util has-incoming | wc -l)"
@@ -185,6 +184,27 @@ function git-workbranch-status {
 			cd "$cwd"
 		fi
 	done
+}
+
+function git-workbranch-prune {
+	local parent=$(git-workbranch-parent)
+	local parent_path="$(git-workbranch-util branch-path $parent)"
+	# NOTE: We may be inside a branch like PROJECT--BRANCH, we just want PROJECT
+	local parent_name="$(basename "$parent_path" | awk -F"--" '{print $1}')"
+	local base_path=$(readlink -f "$parent_path/..")
+	local local_branches=$(echo ${base_path}/${parent_name}--*)
+	local worktrees="$(git -C "$parent_path" worktree list | cut -d' ' -f1)"
+	for local_branch in $local_branches; do
+		if [ "$local_branch" = "${base_path}/${parent_name}--*" ]; then
+			git-workbranch-util warn "No matching sub-branch: $local_branch"
+		elif [ ! -e "$local_branch/.git" ]; then
+			git-workbranch-util warn "Branch path has no .git directory, likely not a branch: $local_branch"
+		elif [ -z "$(git -C "$parent_path" worktree list | grep -F "$local_branch")" ]; then
+			git-workbranch-util warn "Branch path has has no worktree: $local_branch"
+			git-workbranch-util tip "Run 'env -C $local_branch git-workbranch close'"
+		fi
+	done
+	git -C "$parent_path" worktree prune
 }
 
 # -- doc
@@ -412,9 +432,7 @@ pa | parent)
 	shift
 	git-workbranch-parent "$@"
 	;;
-
-\
-	rm | remove)
+rm | remove)
 	shift
 	git-workbranch-remove "$@"
 	;;
@@ -426,7 +444,10 @@ st | status)
 	shift
 	git-workbranch-status "$@"
 	;;
-
+pr | prune)
+	shift
+	git-workbranch-prune "$@"
+	;;
 *)
 	echo "git-workbranch available commands:"
 	echo " - create   BRANCH_NAME:   Creates a new branch worktree"
@@ -434,6 +455,7 @@ st | status)
 	echo " - merge    [BRANCH_NAME]"
 	echo " - close    [BRANCH_NAME]"
 	echo " - remove   [BRANCH_NAME]"
+	echo " - prune"
 	echo " - current                 Returns the name of the current branch"
 	echo " - parent                  Returns the name of the parent branch"
 	echo " - list:                   List the checked out worktree branches"

@@ -28,17 +28,18 @@
 	br = branch --remote
 	# List all branches, including remote
 	lsb = branch -a
-	# SEE: https://softwaredoug.com/blog/2022/11/09/idiot-proof-git-aliases.html
-    mainbranch = "!git remote show origin | sed -n '/HEAD branch/s/.*: //p'"
-    synced = "!git pull origin $(git mainbranch) --rebase"
-    update = "!git pull origin $(git rev-parse --abbrev-ref HEAD) --rebase"
-    squash = "!git rebase -v -i $(git mainbranch)"
-    publish = push origin HEAD --force-with-lease
-    pub = publish
+	# # SEE: https://softwaredoug.com/blog/2022/11/09/idiot-proof-git-aliases.html
+    # mainbranch = "!git remote show origin | sed -n '/HEAD branch/s/.*: //p'"
+    # synced = "!git pull origin $(git mainbranch) --rebase"
+    # update = "!git pull origin $(git rev-parse --abbrev-ref HEAD) --rebase"
+    # squash = "!git rebase -v -i $(git mainbranch)"
+	# publish = push origin HEAD --force-with-lease
+	# pub = publish
 [init]
 	defaultBranch = main
 [core]
 	excludesfile = ~/.gitignore
+	# filemode = true
 [fetch]
 	prune = true
 [submodule]
@@ -47,8 +48,8 @@
 	autoSetupRemote = true
 [credential]
 	helper = store
-[filter "lfs"]
-	smudge = git-lfs smudge -- %f
-	process = git-lfs filter-process
-	required = true
-	clean = git-lfs clean -- %f
+# [filter "lfs"]
+# 	smudge = git-lfs smudge -- %f
+# 	process = git-lfs filter-process
+# 	required = true
+# 	clean = git-lfs clean -- %f

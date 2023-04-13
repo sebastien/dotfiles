@@ -45,6 +45,7 @@ if [ -z "$BASH_CONFIG_LOADED" ]; then
 	load-source "$HOME/.nix-profile/etc/profile.d/nix.sh" silent
 	# We need to that later on
 	# load-source "$BASH_BASE/preexec.sh"
+	load-source "$BASH_BASE/secrets.sh"
 	load-source "$BASH_BASE/prompt.sh"
 	load-source "$HOME/Workspace/nota/src/sh/libnota.sh"
 

@@ -1,6 +1,8 @@
 [user]
 	name=Sébastien Pierre
 	email=sebastien.pierre@gmail.com
+[diff]
+	external=difft
 [pull]
 	# SEE: https://stackoverflow.com/questions/2472254/when-should-i-use-git-pull-rebase
 	rebase  = false

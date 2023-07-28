@@ -8,4 +8,10 @@ fi
 if which git-town &> /dev/null; then
 	source <(git-town completions bash)
 fi
+
+# We load nix if we have it
+if [ -e "$HOME/.nix-profile/etc/profile.d/nix.sh" ]; then
+  . $HOME/.nix-profile/etc/profile.d/nix.sh
+fi
+
 # EOF

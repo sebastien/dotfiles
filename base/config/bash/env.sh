@@ -7,5 +7,10 @@ export NODE_PATH="$NPM_PACKAGES/lib/node_modules:$NODE_PATH"
 export DENO_INSTALL="$HOME/.deno"
 export BUN_INSTALL="$HOME/.bun"
 export SINK_DIFF="nvim -d"
-export PATH="$DENO_INSTALL/bin:$GOPATH/bin:$NPM_PACKAGES/bin/:$HOME/.cargo/bin:$BUN_INSTALL/bin:$HOME/.codon/bin:$PATH"
+LOCAL_PATH="$DENO_INSTALL/bin:$GOPATH/bin:$NPM_PACKAGES/bin/:$HOME/.cargo/bin:$BUN_INSTALL/bin:$HOME/.codon/bin"
+if [ -e "$HOME/.local/src/Nim" ]; then
+	export NIM_PATH="$HOME/.local/src/Nim"
+	LOCAL_PATH="$LOCAL_PATH:$NIM_PATH/bin"
+fi
+export PATH="$LOCAL_PATH:$PATH"
 # EOF

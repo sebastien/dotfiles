@@ -1,0 +1,16 @@
+
+"ui.background" = "hidden"
+"ui.selection" = "purple"
+"ui.text" = "grey"
+"ui.gutter" = "purple_dk"
+
+[palette]
+white = "#ffffff"
+black = "#000000"
+blue_bright="#1f8afc"
+grey="#b8b8b8"
+orange_yellow="#f5c400"
+orange="#e3861c"
+teal="#4abaab"
+purple_dk="#221924"
+purple="#571663"

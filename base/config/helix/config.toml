@@ -1,0 +1,6 @@
+[editor]
+cursorline=true
+true-color=true
+rulers=[4,8,12,80]
+color-modes=true
+theme=gold

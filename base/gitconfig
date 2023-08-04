@@ -1,21 +1,29 @@
 [user]
 	name=Sébastien Pierre
 	email=sebastien.pierre@gmail.com
+# FROM https://github.com/dandavison/delta
+[core]
+    pager = delta
+
+[interactive]
+    diffFilter = delta --color-only
+
+[delta]
+    navigate = true    # use n and N to move between diff sections
+    light = false      # set to true if you're in a terminal w/ a light background color (e.g. the default macOS terminal)
+
+[merge]
+    conflictstyle = diff3
+
 [diff]
-	external=difft
-    tool = difftastic
-[difftool]
-    prompt = false
-[difftool "difftastic"]
-    cmd = difft "$LOCAL" "$REMOTE"
-[pager]
-    difftool = true
+    colorMoved = default
+
 [pull]
 	# SEE: https://stackoverflow.com/questions/2472254/when-should-i-use-git-pull-rebase
 	rebase  = false
 [alias]
 	lua = log --all --author
-    dft = difftool
+	dft = difftool
 	ds = diff --staged
 	# Recursive clone
 	cr = clone --recurse-submodules

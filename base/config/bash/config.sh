@@ -4,6 +4,12 @@ set -o vi
 shopt -s extglob
 shopt -s checkwinsize
 
+export PYENV_ROOT="$HOME/.pyenv"
+if [ -e "$PYENV_ROOT" ]; then
+	command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+	eval "$(pyenv init -)"
+fi
+
 if [ -z "$BASH_CONFIG_LOADED" ]; then
 
 	#export BASH_CONFIG_LODAED="$(date +"%Y-%m-%dT%H:%M:%S:%3N")"
@@ -49,6 +55,8 @@ if [ -z "$BASH_CONFIG_LOADED" ]; then
 	load-source "$BASH_BASE/secrets.sh"
 	load-source "$BASH_BASE/prompt.sh"
 	load-source "$HOME/Workspace/nota/src/sh/libnota.sh"
+
+
 
 	for completion in $BASH_BASE/completion.*.sh; do
 		load-source "$completion"

@@ -19,6 +19,7 @@ if [ -z "$BASH_CONFIG_LOADED" ]; then
 	export LC_ALL="en_US.UTF-8"                           # byte-wise sorting and force language for those pesky apps
 	export MANPAGER="less -X"                             # Less is more
 	export CDPATH=.:$HOME/Workspace:$HOME
+	export LOCALE_ARCHIVE=/usr/lib/locale/locale-archive¬
 
 	function load-source() {
 		if [ -e "$1" ]; then

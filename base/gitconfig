@@ -1,15 +1,17 @@
 [user]
 	name=Sébastien Pierre
 	email=sebastien.pierre@gmail.com
-[diff]
-	external=difft
-    tool = difftastic
+# NOTE: I've tried difftastic but found it doesn't work that well esp
+# for Makefiles
+# [diff]
+# 	external=difft
+#     tool = difftastic
+# [pager]
+#     difftool = true
 [difftool]
     prompt = false
 [difftool "difftastic"]
     cmd = difft "$LOCAL" "$REMOTE"
-[pager]
-    difftool = true
 [pull]
 	# SEE: https://stackoverflow.com/questions/2472254/when-should-i-use-git-pull-rebase
 	rebase  = false

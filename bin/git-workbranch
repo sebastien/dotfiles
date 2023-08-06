@@ -420,6 +420,11 @@ co | checkout)
 	shift
 	git-workbranch-checkout "$@"
 	;;
+me | merge)
+	shift
+	git-workbranch-merge "$@"
+	;;
+
 cl | close)
 	shift
 	git-workbranch-close "$@"

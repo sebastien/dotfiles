@@ -1,0 +1,146 @@
+#!/usr/bin/env python
+import subprocess  # nosec: B404
+import re
+import difflib
+from datetime import datetime
+
+
+# --
+# A simple utility to prepare a change summary to be pasted in a PR
+
+CATEGORIES: list[str] = [
+    "Changed",
+    "Removed",
+    "Refactored",
+    "New",
+    "Added",
+    "Fixed",
+    "Cleaned",
+    "WIP",
+]
+NORMCATEGORIES = {
+    "Refactored": "Changed",
+    "Cleaned": "Fixed",
+    "New": "Added",
+}
+
+RE_MESSAGE = re.compile(
+    r"\[(?P<category>[^\]]+)\]\s*((?P<scope>[^:]+):)?(?P<description>.*)$"
+)
+
+
+def nearest(value: str, values: list[str]) -> str:
+    return difflib.get_close_matches(value, values, n=1, cutoff=0.0)[0]
+
+
+def run_command(*command: str):
+    process = subprocess.Popen(command, stdout=subprocess.PIPE)  # nosec: B603
+    output, error = process.communicate()
+    return output.decode("utf-8")
+
+
+def get_parent_branch():
+    branch_history = [
+        _
+        for _ in run_command("git", "reflog", "--date=iso").split("\n")
+        if "checkout" in _
+    ]
+    for entry in reversed(branch_history):
+        parts = entry.split()
+        if len(parts) < 8:
+            continue
+        if parts[7] == "from":
+            return parts[8]
+    # fallback if no parent branch is found
+    if run_command("git", "branch", "--list", "master"):
+        return "master"
+    elif run_command("git", "branch", "--list", "main"):
+        return "main"
+    else:
+        raise RuntimeError(
+            "Cannot find a suitable fallback branch. Please specify the parent branch."
+        )
+
+
+def get_new_commit_messages():
+    current_branch = run_command("git", "symbolic-ref", "--short", "HEAD").strip()
+    parent_branch = get_parent_branch()
+    new_commits = run_command("git", "cherry", parent_branch, current_branch)
+    new_commit_hashes = [
+        commit.split()[1] for commit in new_commits.split("\n") if commit
+    ]
+
+    categories: dict[str, dict[str, list[str]]] = {}
+    for commit_hash in new_commit_hashes:
+        commit_message = run_command(
+            "git", "log", "--format=%B", "-n", "1", commit_hash
+        ).strip()
+        if not (match := RE_MESSAGE.match(commit_message)):
+            print(f"!!! ERR Cannot parse message: {repr(commit_message)}")
+        else:
+            category = match.group("category").capitalize()
+            scope = (match.group("scope") or "*").lower()
+            description = match.group("description")
+            category = nearest(category, CATEGORIES)
+            category = NORMCATEGORIES.get(category, category)
+            categories.setdefault(category, {}).setdefault(scope, []).append(
+                f"{description} ({commit_hash})".strip()
+            )
+    categories = {k: categories[k] for k in CATEGORIES if k in categories}
+    for category, scopes in categories.items():
+        print(f"\n## {category}\n")
+        for scope in sorted(scopes):
+            for message in scopes[scope]:
+                print(f"   - `{scope}`: {message}")
+
+
+def get_commit_info():
+    current_branch = run_command("git", "symbolic-ref", "--short", "HEAD").strip()
+    parent_branch = get_parent_branch()
+
+    # Get new commit hashes
+    new_commits = run_command("git", "cherry", parent_branch, current_branch)
+    new_commit_hashes = [
+        commit.split()[1] for commit in new_commits.split("\n") if commit
+    ]
+
+    if not new_commit_hashes:
+        print(
+            "No new commits added to the current branch compared to the parent branch."
+        )
+        return
+
+    # Get date of the oldest and newest added commits
+    date_format = "%a %b %d %H:%M:%S %Y %z"
+    oldest_commit_date = datetime.strptime(
+        run_command("git", "show", "-s", "--format=%cd", new_commit_hashes[-1]).strip(),
+        date_format,
+    )
+    newest_commit_date = datetime.strptime(
+        run_command("git", "show", "-s", "--format=%cd", new_commit_hashes[0]).strip(),
+        date_format,
+    )
+
+    # Calculate span between the oldest and newest added commits
+    span_in_days = abs(newest_commit_date - oldest_commit_date).days
+
+    # Get number of added commits
+    num_commits = len(new_commit_hashes)
+
+    # Get number of authors of added commits
+    authors = set()
+    for commit_hash in new_commit_hashes:
+        authors.add(run_command("git", "show", "-s", "--format=%ae", commit_hash))
+
+    num_authors = len(authors)
+
+    print(
+        f"\n{num_commits} commit(s) over:{span_in_days} day(s) by {num_authors} contributor(s)"
+    )
+
+
+if __name__ == "__main__":
+    get_new_commit_messages()
+    get_commit_info()
+
+# EOF

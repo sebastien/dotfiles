@@ -18,7 +18,7 @@ case $HOSTNAME in
 bench*)
 	HOSTICON="🧰"
 	;;
-grenade*)
+?renade*)
 	HOSTICON="💻"
 	;;
 central*)
@@ -26,6 +26,9 @@ central*)
 	;;
 cerise*)
 	HOSTICON="🍒"
+	;;
+X1T*)
+	HOSTICON="📓"
 	;;
 nzx*)
 	HOSTICON="🏦"

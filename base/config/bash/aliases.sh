@@ -1,7 +1,9 @@
 alias e=nvim
 alias l="nvim -R"
-alias lst="exa --long --tree"
-alias ls="exa"
+if [ -n "$(which eza 2>/dev/null)" ]; then
+	alias lst="eza --long --tree"
+	alias ls="eza"
+fi
 alias gt="git town"
 alias pk-add="sudo dnf install"
 alias pk-rem="sudo dnf uninstall"

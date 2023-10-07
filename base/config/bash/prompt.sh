@@ -12,11 +12,35 @@
 #   shopt -s extglob # function uses extended globbing
 # fi
 
-HAS_MPSTAT=$(which mpstat 2> /dev/null)
+HAS_MPSTAT=$(which mpstat 2>/dev/null)
+
+case $HOSTNAME in
+bench*)
+	HOSTICON="🧰"
+	;;
+?renade*)
+	HOSTICON="💻"
+	;;
+central*)
+	HOSTICON="🏟️"
+	;;
+cerise*)
+	HOSTICON="🍒"
+	;;
+X1T*)
+	HOSTICON="📓"
+	;;
+nzx*)
+	HOSTICON="🏦"
+	;;
+NZX*)
+	HOSTICON="🏦"
+	;;
+esac
 
 function strip-ansi() {
-  # shopt -s extglob # function uses extended globbing
-  printf %s "${1//$'\e'\[*([0-9;])m/}"
+	# shopt -s extglob # function uses extended globbing
+	printf %s "${1//$'\e'\[*([0-9;])m/}"
 }
 
 function strip-prompt() {
@@ -32,7 +56,7 @@ function palette {
 	echo
 }
 
-if [ -z "$NOCOLOR" ] ; then
+if [ -z "$NOCOLOR" ]; then
 	CYAN="$(tput setaf 33)"
 	BLUE_DK="$(tput setaf 27)"
 	BLUE="$(tput setaf 33)"
@@ -49,7 +73,7 @@ if [ -z "$NOCOLOR" ] ; then
 	BOLD="$(tput bold)"
 	REVERSE="$(tput rev)"
 	RESET="$(tput sgr0)"
-elif tput setaf 1 &> /dev/null; then
+elif tput setaf 1 &>/dev/null; then
 	CYAN=""
 	BLUE_DK=""
 	BLUE=""
@@ -68,29 +92,28 @@ elif tput setaf 1 &> /dev/null; then
 	RESET=""
 fi
 
-
 # Path
 # [remotehost]
 # ▒█~/W/tlang » ▓▒░cd appenv/    ⏲ default|1 ⑂ R103+|103 ⋐ tlang:projects:tdoc
 
 function scm-type {
-    git branch >/dev/null 2>/dev/null && echo '±' && return
-    hg root >/dev/null 2>/dev/null && echo '☿' && return
-    echo '○'
+	git branch >/dev/null 2>/dev/null && echo '±' && return
+	hg root >/dev/null 2>/dev/null && echo '☿' && return
+	echo '○'
 }
 
 function prompt-setup {
 	STATUS_COLOR=$(if [[ $? == 0 ]]; then echo -n "${BLUE}"; else echo -n "${RED}"; fi)
 	export STATUS_COLOR
 	# We change the current directory
-	if declare -f -F cd-prompt-helper > /dev/null;  then
+	if declare -f -F cd-prompt-helper >/dev/null; then
 		cd-prompt-helper
 	fi
 }
 
 function prompt-left {
 	prompt_path="$(basename $(dirname "$PWD"))/\[$BOLD\]$(basename "$PWD")"
-	echo "\[$STATUS_COLOR\]─\[$RESET\]\[$STATUS_COLOR\]░▒▓\[$REVERSE\] ${prompt_path} \[$RESET\]\[$STATUS_COLOR\]▓▒░\[${STATUS_COLOR}\] ▷\[${RESET}\] "
+	echo "$HOSTICON\[$STATUS_COLOR\]─\[$RESET\]\[$STATUS_COLOR\]░▒▓\[$REVERSE\] ${prompt_path} \[$RESET\]\[$STATUS_COLOR\]▓▒░\[${STATUS_COLOR}\] ▷\[${RESET}\] "
 }
 
 function prompt-right {
@@ -99,17 +122,17 @@ function prompt-right {
 	# As usual, Arch Linux has a great [Bash/Prompt customization](https://wiki.archlinux.org/index.php/Bash/Prompt_customization)
 	# page.
 	# SEE: https://unix.stackexchange.com/questions/9605/how-can-i-detect-if-the-shell-is-controlled-from-ssh#9607
-	if [[ $(who am i) =~ \([-a-zA-Z0-9\.]+\)$ ]] ; then
+	if [[ $(who am i) =~ \([-a-zA-Z0-9\.]+\)$ ]]; then
 		session_type="┈⦗ssh@$HOSTNAME⦘"
 	else
 		session_type=""
 	fi
 	# We get Git information
 	scm_summary=""
-	git_branch=$(git branch --no-color -l 2> /dev/null)
+	git_branch=$(git branch --no-color -l 2>/dev/null)
 	if [ -n "$git_branch" ]; then
 		git_branch_count=$(echo "$git_branch" | wc -l)
-		git_branch_current=$(echo "$git_branch" | grep '*' |  cut -d' ' -f2)
+		git_branch_current=$(echo "$git_branch" | grep '*' | cut -d' ' -f2)
 		git_staged_count=$(git diff --cached --numstat | wc -l)
 		git_unstaged_count=$(git diff --numstat | wc -l)
 		git_rev_number=$(git rev-list --count HEAD)
@@ -132,7 +155,6 @@ function prompt-right {
 	echo "${appenv_status}${scm_summary}\[$PURPLE_DK\]⛬ ${process_count} ○$(date '+%T')\[$PURPLE\]${session_type}\[$RESET\]"
 }
 
-
 if [ -z "$SHELL_TYPE" ] || [[ "$SHELL_TYPE" == "bash" ]]; then
 	function prompt() {
 		# If we have cd-store, we call it
@@ -144,7 +166,7 @@ if [ -z "$SHELL_TYPE" ] || [[ "$SHELL_TYPE" == "bash" ]]; then
 		prompt_right_noctrl=$(strip-prompt "$prompt_right")
 		prompt_right_len="${#prompt_right_noctrl}"
 		# NOTE: Not sure why we have a manual correction, but here we go
-		prompt_right_padded=$(printf "%$(($COLUMNS-${#prompt_right_noctrl}+3))s%s" "" "$prompt_right")
+		prompt_right_padded=$(printf "%$(($COLUMNS - ${#prompt_right_noctrl} + 3))s%s" "" "$prompt_right")
 
 		PS1="$prompt_right_padded\n$prompt_left"
 	}

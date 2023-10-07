@@ -17,6 +17,7 @@
 
 [diff]
     colorMoved = default
+	pager = delta
 
 [pull]
 	# SEE: https://stackoverflow.com/questions/2472254/when-should-i-use-git-pull-rebase

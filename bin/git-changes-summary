@@ -57,9 +57,7 @@ def get_parent_branch():
     elif run_command("git", "branch", "--list", "main"):
         return "main"
     else:
-        raise RuntimeError(
-            "Cannot find a suitable fallback branch. Please specify the parent branch."
-        )
+        return "origin/HEAD"
 
 
 def get_new_commit_messages():

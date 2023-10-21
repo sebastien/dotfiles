@@ -4,4 +4,9 @@ if [ ! -d "$HOME/.fzf" ]; then
 	~/.fzf/install
 	echo "DONE!"
 fi
+# SEE: https://github.com/lincheney/fzf-tab-completion#bash
+# if [ ! -d "$HOME/.config/bash/fzf-completion.sh" ]; then
+# 	source "$HOME/.config/bash/fzf-completion.sh" 
+# 	bind -x '"\t": fzf_bash_completion'
+# fi
 # EOF

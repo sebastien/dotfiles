@@ -1,8 +1,5 @@
 alias e=nvim
 alias l="nvim -R"
-alias lst="exa --long --tree"
-alias ls="exa"
-alias gt="git town"
 alias pk-add="sudo dnf install"
 alias pk-rem="sudo dnf uninstall"
 alias pk-fd="sudo dnf search"

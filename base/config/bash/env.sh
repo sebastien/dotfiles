@@ -3,6 +3,7 @@ export PAGER=bat
 export GOPATH=$HOME/.local/share/go
 export GUIX_LOCPATH="$HOME/.guix-profile/lib/locale"
 export NPM_PACKAGES="$HOME/.local/share/npm"
+export PYTHONPATH="$HOME/.local/share/python:$PYTHONPATH"
 export NODE_PATH="$NPM_PACKAGES/lib/node_modules:$NODE_PATH"
 export DENO_INSTALL="$HOME/.deno"
 export BUN_INSTALL="$HOME/.bun"

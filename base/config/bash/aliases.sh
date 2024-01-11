@@ -1,5 +1,9 @@
 alias e=nvim
 alias l="nvim -R"
+if [ -n "$(which eza 2>/dev/null)" ]; then
+	alias lst="eza --long --tree"
+	alias ls="eza"
+fi
 alias pk-add="sudo dnf install"
 alias pk-rem="sudo dnf uninstall"
 alias pk-fd="sudo dnf search"

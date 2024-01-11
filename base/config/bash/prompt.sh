@@ -16,25 +16,25 @@ HAS_MPSTAT=$(which mpstat 2>/dev/null)
 
 case $HOSTNAME in
 bench*)
-	HOSTICON="🧰"
+	HOSTICON="🧰 "
 	;;
 ?renade*)
-	HOSTICON="💻"
+	HOSTICON="💻 "
 	;;
 central*)
-	HOSTICON="🏟️"
+	HOSTICON="🏟️ "
 	;;
 cerise*)
-	HOSTICON="🍒"
+	HOSTICON="🍒 "
 	;;
 X1T*)
-	HOSTICON="📓"
+	HOSTICON="📓 "
 	;;
 nzx*)
-	HOSTICON="🏦"
+	HOSTICON="🏦 "
 	;;
 NZX*)
-	HOSTICON="🏦"
+	HOSTICON="🏦 "
 	;;
 esac
 

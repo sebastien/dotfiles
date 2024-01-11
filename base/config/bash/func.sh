@@ -1,23 +1,72 @@
 # --
 # Attaches to the given or latest TMUX session
+
+if [ -n "${TERM_MULTIPLEXER}" ]; then
+	echo -n ""
+elif [ -n "$(which zellij 2> /dev/null)" ]; then
+	export TERM_MULTIPLEXER=zellij
+else
+	export TERM_MULTIPLEXER=tmux
+fi
+
 function tat {
 	local session="$1"
 	local sid=""
 	if [ -z "$session" ]; then
-		session=$(tmux list-session | tail -n1 | cut -d: -f1)
-		sid="$session"
+		case $TERM_MULTIPLEXER in
+			tmux)
+				session=$(tmux list-session | tail -n1 | cut -d: -f1)
+				sid="$session"
+				;;
+			zellij)
+				session=$(NO_COLOR=1 zellij list-sessions | sed 's/\x1B\[[0-9;]*m//g' | tail -n1 | cut -d' ' -f1)
+				sid="$session"
+				;;
+		esac
 	else
-		sid=$(tmux list-session | grep "$session" | tail -n1 | cut -d: -f1)
+		case $TERM_MULTIPLEXER in
+			tmux)
+				sid=$(tmux list-session | grep "$session" | tail -n1 | cut -d: -f1)
+				;;
+			zellij)
+				sid=$(zellij list-sessions | sed 's/\x1B\[[0-9;]*m//g' | grep "$session" | tail -n1 | cut -d' ' -f1)
+				;;
+		esac
 	fi
 	if [ -z "$sid" ]; then
 		echo "!!! ERR Could not find a running tmux session $session"
 	else
-		tmux attach-session -t "$sid"
+		case $TERM_MULTIPLEXER in
+			tmux)
+				tmux attach-session -t "$sid"
+				;;
+			zellij)
+				zellij attach "$sid"
+				;;
+		esac
 	fi
+}
+function tlist {
+	case $TERM_MULTIPLEXER in
+		tmux)
+			tmux list-session | cut -d: -f1
+			;;
+		zellij)
+			zellij list-sessions | sed 's/\x1B\[[0-9;]*m//g' | cut -d' ' -f1
+			sid="$session"
+			;;
+	esac
 }
 
 function tnew {
-	tmux new -t "$1"
+		case $TERM_MULTIPLEXER in
+			tmux)
+				tmux new -t "$1"
+				;;
+			zellij)
+				zellij attach --create "$1"
+				;;
+		esac
 }
 
 # --
@@ -30,6 +79,7 @@ function pl {
 	fi
 
 }
+
 function kl {
 	if [ -z "$1" ]; then
 		echo "Need to give a query string to lookup corresponding processes"

@@ -23,3 +23,5 @@ source ~/.config/zsh/config.zsh
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 source /home/sebastien/.config/broot/launcher/bash/br
+
+eval "$(atuin init zsh)"

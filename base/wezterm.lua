@@ -18,8 +18,13 @@ config.color_scheme = 'AdventureTime'
 config.window_background_opacity = 0.75
 
 
-config.font_size = 10.0
-config.font = wezterm.font("Iosevka Term")
+config.font_size = 11.0
+-- config.line_height = 1.25
+config.font = wezterm.font_with_fallback {
+	"IosevkaTerm NF",
+	"Iosevka Term",
+}
+
 config.freetype_load_target = "Light"
 
 config.ssh_domains = {

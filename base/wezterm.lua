@@ -15,7 +15,7 @@ end
 
 -- For example, changing the color scheme:
 config.color_scheme = 'AdventureTime'
-config.window_background_opacity = 0.75
+config.window_background_opacity = 0.85
 
 
 config.font_size = 11.0

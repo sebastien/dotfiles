@@ -329,6 +329,8 @@ function git-workbranch-merge {
 # Creates an archive of the current branch
 function git-workbranch-archive {
 	local has_force=0
+	local parent
+	local current
 	if [ ! -z "$@" ]; then
 		case "$1" in
 			-f|--force)
@@ -349,6 +351,8 @@ function git-workbranch-archive {
 			git-workbranch-util list-changes
 		fi
 	fi
+	current="$(git-workbranch-util branch-current)"
+	parent="$(git-workbranch-util branch-origin)"
 	if [ -z "$parent" ]; then
 		git-workbranch-util err "Can't find a parent branch"
 		exit 1
@@ -357,6 +361,14 @@ function git-workbranch-archive {
 		git-workbranch-util err "Can't find a current branch"
 		exit 1
 	fi
+	# if [ -e Makefile ]; then
+	# 	git-workbranch-util log "Cleaning up makefile"
+	# 	make clean
+	# fi
+	echo $PWD
+	local current_directory
+	current_directory=$(basename "$PWD")
+	env -C "$(dirname "$PWD")" apack "$(basename "$PWD").tar.xz"  "$(basename "$PWD")"
 
 }
 function git-workbranch-util {
@@ -396,8 +408,8 @@ function git-workbranch-util {
 		git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null
 		;;
 	should-push)
-		current="$(git-workbranch-util branch-origin)"
-		parent="$(git-workbranch-util branch-current)"
+		current="$(git-workbranch-util branch-current)"
+		parent="$(git-workbranch-util branch-origin)"
 		GIT_PAGER= git log "$current..$parent" --pretty=format:'%ad %h %d %s' --date=iso
 		shift
 		;;

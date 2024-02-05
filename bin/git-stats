@@ -1,10 +1,11 @@
 #!/usr/bin/env python
-import re
+import re, sys
 from subprocess import Popen, PIPE
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from math import floor
-from typing import Optional, Iterator
+from typing import Optional, Iterator, Callable, NamedTuple
+
 
 RE_COMMIT = re.compile(r"^commit (?P<hash>[0-9a-f]+)")
 RE_ATTRIBUTE = re.compile(r"^(?P<key>[A-Za-z]+):[ ]+(?P<value>.*)$")
@@ -143,7 +144,43 @@ def report_by_author(stream: Iterator[Commit]):
                     )
 
 
+class Pattern(NamedTuple):
+    includes: list[str] | None = None
+    excludes: list[str] | None = None
+
+
+def commit_filter(
+    paths: Pattern | None = None,
+) -> Callable[[Iterator[Commit]], Iterator[Commit]]:
+    def processor(stream: Iterator[Commit]) -> Iterator[Commit]:
+        for atom in stream:
+            skip: bool = False
+            if paths:
+                if paths.includes:
+                    was_found: bool = False
+                    for _ in paths.includes:
+                        if any(p.startswith(_) for p in atom.paths):
+                            was_found = True
+                            break
+                    if not was_found:
+                        skip = True
+                if paths.excludes and not skip:
+                    for _ in paths.excludes:
+                        if any(p.startswith(_) for p in atom.paths):
+                            skip = True
+                            break
+            if not skip:
+                yield atom
+
+    return processor
+
+
 if __name__ == "__main__":
-    report_by_author(git_log())
+    args = sys.argv[1:]
+    paths_included: list[str] = []
+    for arg in args:
+        paths_included.append(arg)
+
+    report_by_author(commit_filter(paths=Pattern(paths_included))(git_log()))
 
 # EOFgg

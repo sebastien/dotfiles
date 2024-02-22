@@ -21,6 +21,13 @@ mkdir-parent=$(shell if [ ! -d "$(dir $(1))" ]; then mkdir -p "$(dir $(1))"; fi;
 install: $(PRODUCT)
 	$(info Profile installed)
 
+uninstall:
+	@for ITEM in $(PRODUCT); do
+		if [ -L "$$ITEM" ]; then
+			unlink "$$ITEM"
+		fi
+	done
+
 $(HOME)/.%: $(PROFILE)/%
 	@if [ -f "$@" ] || [ -d "$@" ]; then mv "$@" "$(call mkdir-parent,$(BASE)backup/$(NOW)/$*)"; fi
 	@if [ ! -d "$(dir $@)" ]; then mkdir -p "$(dir $@)"; fi
@@ -41,4 +48,6 @@ base/config/bash/preexec.sh:
 
 print-%:
 	$(info $*=$(subst $(SPACE),$(NEWLINE),$($*)))
+
+.ONESHELL:
 # EOF

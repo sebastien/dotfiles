@@ -9,4 +9,8 @@ if [ -e "$HOME/.nix-profile/etc/profile.d/nix.sh" ]; then
   . $HOME/.nix-profile/etc/profile.d/nix.sh
 fi
 
+if [ -e "$HOME/.sdkman/bin/sdkman-init.sh" ]; then
+	 source "$HOME/.sdkman/bin/sdkman-init.sh"
+fi
+
 # EOF

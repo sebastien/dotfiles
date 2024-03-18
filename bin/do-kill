@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+
+this_pid=$$
+if [ ! -z "$(echo "$@")" ]; then
+	selected_process="$(ps -aux | grep -v $this_pid | grep -v fzf | fzf -i --query="$(echo $@)")"
+	selected_pid="$(echo "$selected_process" | awk '{print $2}')"
+	if [ -n "$selected_pid" ]; then
+		echo "Killing process: $selected_pid"
+		kill -9 "$selected_pid"
+	fi
+fi
+# EOF

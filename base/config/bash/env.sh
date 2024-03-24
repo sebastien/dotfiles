@@ -11,7 +11,7 @@ export SINK_DIFF="nvim -d"
 if [ -e "$HOME/Workspace/data" ]; then
 	export DATA_PATH="$HOME/Workspace/data"
 fi
-LOCAL_PATH="$DENO_INSTALL/bin:$GOPATH/bin:$NPM_PACKAGES/bin/:$HOME/.cargo/bin:$BUN_INSTALL/bin:$HOME/.codon/bin"
+LOCAL_PATH="$DENO_INSTALL/bin:$GOPATH/bin:$NPM_PACKAGES/bin/:$HOME/.cargo/bin:$BUN_INSTALL/bin:$HOME/.codon/bin:$HOME/.nimble/bin"
 if [ -e "$HOME/.local/src/Nim" ]; then
 	export NIM_PATH="$HOME/.local/src/Nim"
 	LOCAL_PATH="$LOCAL_PATH:$NIM_PATH/bin"

@@ -55,9 +55,13 @@ if [ -z "$BASH_CONFIG_LOADED" ]; then
 	load-source "$BASH_BASE/secrets.sh"
 	load-source "$BASH_BASE/prompt.sh"
 	load-source "$HOME/Workspace/nota/src/sh/libnota.sh"
+	load-source "$HOME/.sdkman/bin/sdkman-init.sh"
 
 
 
+	if [ ! -z "$(which jj 2> /dev/null)" ]; then
+		source <(jj util completion bash)
+	fi
 	for completion in $BASH_BASE/completion.*.sh; do
 		load-source "$completion"
 	done

@@ -18,4 +18,16 @@ if [ -e "$HOME/.local/src/Nim" ]; then
 	LOCAL_PATH="$LOCAL_PATH:$NIM_PATH/bin"
 fi
 export PATH="$LOCAL_PATH:$PATH"
+
+function use-openai {
+	export OPENAI_API_KEY="$OPENAI_TOKEN"
+	export OPENAI_API_BASE=""
+}
+
+function use-openrouter {
+	export OPENAI_API_KEY="$OPENAI_TOKEN"
+	export OPENAI_API_BASE=""
+}
+
+use-openai
 # EOF

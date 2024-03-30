@@ -1,5 +1,0 @@
-typeset -U PATH path
-. "$HOME/.cargo/env"
-if [ -e /home/spierre/.nix-profile/etc/profile.d/nix.sh ]; then . /home/spierre/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer
-
-if [ -e /home/sebastien/.nix-profile/etc/profile.d/nix.sh ]; then . /home/sebastien/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer

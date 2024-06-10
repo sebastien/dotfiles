@@ -43,6 +43,8 @@
 	supr = submodule update --remote
 	sup = submodule update
 	sin = submodule init
+	supl = submodule foreach git pull
+	suplr = submodule foreach git pull --rebase
 	rb = checkout --track
 	br = branch --remote
 	# List all branches, including remote

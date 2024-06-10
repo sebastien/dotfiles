@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# Check if correct number of arguments are provided
+if [ "$#" -ne 2 ]; then
+    echo "Usage: $0 <PATH> <EXPR>"
+    exit 1
+fi
+
+# Set the file path and expression from command line arguments
+FILE=$1
+EXPR=$2
+
+# Iterate through the git revisions of the file (newest to oldest)
+for REV in $(git log --pretty=format:%h --follow -- "$FILE"); do
+    # Get the content of the file at this revision
+    CONTENT=$(git show "$REV":"$FILE")
+    
+    # Search for the expression in the content
+	PROCESSED=$(grep -q "$EXPR" <<< "$CONTENT")
+    if [ $? == 0 ]; then
+		echo "== $REV FOUND"
+		git show "$REV":"$FILE" | grep "$EXPR"
+        # If found, output the revision number, status, line number, and line text
+		# while IFS= read -r LINE; do
+		# 	# Process each line here
+		# 	LINE_NUMBER=$(echo "$LINE" | cut -d ':' -f 1)
+		# 	LINE_TEXT=$(echo "$LINE" | cut -d ':' -f 2-)
+		# 	echo "$REV FOUND $LINE_NUMBER $LINE_TEXT"
+		# done <<< "$PROCESSED"
+    else
+        # If not found, output the revision number and status
+        echo "$REV NOT_FOUND"
+    fi
+done
+

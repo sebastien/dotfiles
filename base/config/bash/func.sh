@@ -93,4 +93,9 @@ function kl {
 
 }
 
+# --
+# Sets the term title
+function do-set-term-title {
+	echo -ne "\033]0;$1\007"
+}
 # EOF

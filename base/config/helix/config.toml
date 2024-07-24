@@ -3,9 +3,7 @@ cursorline=true
 true-color=true
 rulers=[4,8,12,80]
 color-modes=true
-theme=gold
-
-[editor]
+# theme="gold"
 line-number = "relative"
 mouse = false
 

@@ -16,6 +16,7 @@ CATEGORIES: list[str] = [
     "Added",
     "Fixed",
     "Cleaned",
+    "Submodules",
     "WIP",
 ]
 NORMCATEGORIES = {
@@ -39,7 +40,9 @@ def run_command(*command: str):
     return output.decode("utf-8")
 
 
-def get_parent_branch():
+def get_parent_branch(parent_branch: str | None = None) -> str:
+    if parent_branch:
+        return parent_branch
     branch_history = [
         _
         for _ in run_command("git", "reflog", "--date=iso").split("\n")
@@ -60,9 +63,9 @@ def get_parent_branch():
         return "origin/HEAD"
 
 
-def get_new_commit_messages():
+def get_new_commit_messages(parent_branch: str | None = None):
     current_branch = run_command("git", "symbolic-ref", "--short", "HEAD").strip()
-    parent_branch = get_parent_branch()
+    parent_branch = get_parent_branch(parent_branch)
     new_commits = run_command("git", "cherry", parent_branch, current_branch)
     new_commit_hashes = [
         commit.split()[1] for commit in new_commits.split("\n") if commit
@@ -92,9 +95,9 @@ def get_new_commit_messages():
                 print(f"   - `{scope}`: {message}")
 
 
-def get_commit_info():
+def get_commit_info(parent_branch: str | None = None):
     current_branch = run_command("git", "symbolic-ref", "--short", "HEAD").strip()
-    parent_branch = get_parent_branch()
+    parent_branch = get_parent_branch(parent_branch)
 
     # Get new commit hashes
     new_commits = run_command("git", "cherry", parent_branch, current_branch)
@@ -138,7 +141,10 @@ def get_commit_info():
 
 
 if __name__ == "__main__":
-    get_new_commit_messages()
-    get_commit_info()
+    import sys
+
+    parent_branch = sys.argv[1] if len(sys.argv) > 1 else None
+    get_new_commit_messages(parent_branch)
+    get_commit_info(parent_branch)
 
 # EOF

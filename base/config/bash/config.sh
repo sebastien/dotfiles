@@ -55,7 +55,7 @@ if [ -z "$BASH_CONFIG_LOADED" ]; then
 	load-source "$BASH_BASE/secrets.sh"
 	load-source "$BASH_BASE/prompt.sh"
 	load-source "$HOME/Workspace/nota/src/sh/libnota.sh"
-	load-source "$HOME/.sdkman/bin/sdkman-init.sh"
+	load-source "$HOME/.sdkman/bin/sdkman-init.sh" silen
 
 
 

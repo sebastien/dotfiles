@@ -15,6 +15,7 @@ alias do-release-upgrade="sudo dnf --refresh upgrade;sudo dnf system-upgrade --r
 alias jsonpp="python3 -m json.tool"
 alias mdless="pandoc -s -f markdown -t html \!* | w3m -dump -T text/html"
 alias z="cd-search"
+alias aider-claude="aider --model anthropic/claude-3-opus --edit-format diff"
 
 # --
 # Kills the given process, found by grepping the command name

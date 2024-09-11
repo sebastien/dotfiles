@@ -26,7 +26,7 @@ NORMCATEGORIES = {
 }
 
 RE_MESSAGE = re.compile(
-    r"\[(?P<category>[^\]]+)\]\s*((?P<scope>[^:]+):)?(?P<description>.*)$"
+    r"\[(?P<category>[^\]]+)\]\s*((?P<scope>[^:]+):)?(?P<description>.*)"
 )
 
 
@@ -76,17 +76,20 @@ def get_new_commit_messages(parent_branch: str | None = None):
         commit_message = run_command(
             "git", "log", "--format=%B", "-n", "1", commit_hash
         ).strip()
-        if not (match := RE_MESSAGE.match(commit_message)):
+        matched: bool = False
+        for line in commit_message.split("\n"):
+            if match := RE_MESSAGE.match(line):
+                matched = True
+                category = match.group("category").capitalize()
+                scope = (match.group("scope") or "*").lower()
+                description = match.group("description")
+                category = nearest(category, CATEGORIES)
+                category = NORMCATEGORIES.get(category, category)
+                categories.setdefault(category, {}).setdefault(scope, []).append(
+                    f"{description} ({commit_hash})".strip()
+                )
+        if not matched:
             print(f"!!! ERR Cannot parse message: {repr(commit_message)}")
-        else:
-            category = match.group("category").capitalize()
-            scope = (match.group("scope") or "*").lower()
-            description = match.group("description")
-            category = nearest(category, CATEGORIES)
-            category = NORMCATEGORIES.get(category, category)
-            categories.setdefault(category, {}).setdefault(scope, []).append(
-                f"{description} ({commit_hash})".strip()
-            )
     categories = {k: categories[k] for k in CATEGORIES if k in categories}
     for category, scopes in categories.items():
         print(f"\n## {category}\n")

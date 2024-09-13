@@ -1,0 +1,67 @@
+[colors.bright]
+black = "0x7C7C7C"
+blue = "0x0383F5"
+cyan = "0x58C2E5"
+green = "0x8DD006"
+magenta = "0xa87db8"
+red = "0xF3044B"
+white = "0xFFFFFF"
+yellow = "0xCCCC81"
+
+[colors.normal]
+black = "0x272822"
+blue = "0x01549E"
+cyan = "0x1A83A6"
+green = "0x74AA04"
+magenta = "0x89569C"
+red = "0xA70334"
+white = "0xCACACA"
+yellow = "0xB6B649"
+
+[colors.primary]
+background = "0x062a38"
+foreground = "0xf7f7f7"
+
+[env]
+TERM = "xterm-256color"
+
+[font]
+size = 11
+
+[font.normal]
+family = "IosevkaTerm Nerd Font Mono"
+
+[[mouse.bindings]]
+action = "PasteSelection"
+mouse = "Right"
+
+[schemes.Monokai.bright]
+black = "0x7C7C7C"
+blue = "0x0383F5"
+cyan = "0x58C2E5"
+green = "0x8DD006"
+magenta = "0xa87db8"
+red = "0xF3044B"
+white = "0xFFFFFF"
+yellow = "0xCCCC81"
+
+[schemes.Monokai.normal]
+black = "0x272822"
+blue = "0x01549E"
+cyan = "0x1A83A6"
+green = "0x74AA04"
+magenta = "0x89569C"
+red = "0xA70334"
+white = "0xCACACA"
+yellow = "0xB6B649"
+
+[schemes.Monokai.primary]
+background = "0x062a38"
+foreground = "0xf7f7f7"
+
+[selection]
+save_to_clipboard = true
+
+[window]
+decorations = "Full"
+opacity = 0.9

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+for ARG in ./*; do
+	if [ -d "$ARG" ] && [ -e "$ARG/.git" ]; then
+		echo
+		echo "=== Git repository: $ARG"
+		echo
+		env -C "$ARG" git "$@"
+	fi
+done
+# EOF

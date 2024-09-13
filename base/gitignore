@@ -1,6 +1,8 @@
 .pyre
 .circleci/update_check.yml
 .circleci/cli.yml
+*.key
+*.privkey
 *.so
 *.pyc
 *.bak

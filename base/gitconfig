@@ -41,7 +41,7 @@
 	# Checkout submodules
 	sco = submodule update --init --recursive
 	supr = submodule update --remote
-	sup = submodule update
+	sup = submodule update --recursive
 	sin = submodule init
 	supl = submodule foreach git pull
 	suplr = submodule foreach git pull --rebase

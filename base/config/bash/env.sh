@@ -1,4 +1,5 @@
 export EDITOR=nvim
+export BROWSER=firefox
 export PAGER=bat
 export GOPATH=$HOME/.local/share/go
 export GUIX_LOCPATH="$HOME/.guix-profile/lib/locale"

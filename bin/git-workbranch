@@ -85,9 +85,9 @@ function git-workbranch-create {
 	else
 		BRANCH_PATH="$(git rev-parse --show-toplevel)/../$REPO_NAME--$BRANCH"
 		if [ -e "$BRANCH_PATH" ]; then
-			git-workbranch-util warn "Worktree already exists: $(realpath --relative-to="$PWD" $BRANCH_PATH)"
+			git-workbranch-util warn "Worktree already exists: $(realpath --relative-to="$PWD" "$BRANCH_PATH")"
 		else
-			git-workbranch-util log "Creating new branch $BRANCH: $(realpath --relative-to="$PWD" $BRANCH_PATH)"
+			git-workbranch-util log "Creating new branch $BRANCH: $(realpath --relative-to="$PWD" "$BRANCH_PATH")"
 			git worktree add -b "$BRANCH" "$BRANCH_PATH"
 		fi
 	fi
@@ -100,17 +100,17 @@ function git-workbranch-checkout {
 	local REPO_NAME="$(basename $(git rev-parse --show-toplevel) | sed 's|--.*||g')"
 	local MATCHING_BRANCH
 	if ! MATCHING_BRANCH="$(git-pick-branch "$BRANCH")"; then
-		echo $MATCHING_BRANCH
+		echo "$MATCHING_BRANCH"
 		exit 1
 	fi
 	local BRANCH_PATH="$(git rev-parse --show-toplevel)/../$REPO_NAME--$MATCHING_BRANCH"
-	git-workbranch-util log "Selected branch: $MATCHING_BRANCH at '$(realpath --relative-to="$PWD" $BRANCH_PATH)'"
+	git-workbranch-util log "Selected branch: $MATCHING_BRANCH at '$(realpath --relative-to="$PWD" "$BRANCH_PATH")'"
 	if [ -e "$BRANCH_PATH" ]; then
-		git-workbranch-util log "Worktree already exists: $(realpath --relative-to="$PWD" $BRANCH_PATH)"
+		git-workbranch-util log "Worktree already exists: $(realpath --relative-to="$PWD" "$BRANCH_PATH")"
 	else
 		git worktree add "$BRANCH_PATH" "$MATCHING_BRANCH"
-		git -C "$BRANCH_PATH" branch --set-upstream-to=origin/$MATCHING_BRANCH $MATCHING_BRANCH
-		git-workbranch-util log "Worktree created at: $(realpath --relative-to="$PWD" $BRANCH_PATH)"
+		git -C "$BRANCH_PATH" branch --set-upstream-to=origin/"$MATCHING_BRANCH" "$MATCHING_BRANCH"
+		git-workbranch-util log "Worktree created at: $(realpath --relative-to="$PWD" "$BRANCH_PATH")"
 	fi
 }
 
@@ -170,7 +170,7 @@ function git-workbranch-status {
 			cd "$branch_path"
 			local incoming="$(git-workbranch-util has-incoming | wc -l)"
 			local outgoing="$(git-workbranch-util has-outgoing | wc -l)"
-			local archived="$(git tag --points-at | grep archive/$branch | cut -d/ -f2)"
+			local archived="$(git tag --points-at | grep archive/"$branch" | cut -d/ -f2)"
 			local status=
 			if [ -n "$archived" ]; then
 				archived=" $PURPLE$BOLD archived$RESET"
@@ -180,7 +180,7 @@ function git-workbranch-status {
 			if [ "$incoming" = "$outgoing" ] && [ "$incoming" = "●" ]; then
 				status="$GREEN$BOLD synced ✓$RESET"
 			fi
-			echo -e "$BOLD$(basename $branch_path)$RESET $GREEN$incoming $BLUE$outgoing$RESET$archived$status"
+			echo -e "$BOLD$(basename "$branch_path")$RESET $GREEN$incoming $BLUE$outgoing$RESET$archived$status"
 			cd "$cwd"
 		fi
 	done
@@ -193,11 +193,11 @@ function git-workbranch-origin {
 
 function git-workbranch-prune {
 	local parent=$(git-workbranch-parent)
-	local parent_path="$(git-workbranch-util branch-path $parent)"
+	local parent_path="$(git-workbranch-util branch-path "$parent")"
 	# NOTE: We may be inside a branch like PROJECT--BRANCH, we just want PROJECT
 	local parent_name="$(basename "$parent_path" | awk -F"--" '{print $1}')"
 	local base_path=$(readlink -f "$parent_path/..")
-	local local_branches=$(echo ${base_path}/${parent_name}--*)
+	local local_branches=$(echo "${base_path}"/"${parent_name}"--*)
 	local worktrees="$(git -C "$parent_path" worktree list | cut -d' ' -f1)"
 	for local_branch in $local_branches; do
 		if [ "$local_branch" = "${base_path}/${parent_name}--*" ]; then
@@ -226,10 +226,10 @@ function git-workbranch-prune {
 # 		echo "$MATCHING_BRANCH"
 # 		exit 1
 # 	fi
-# 	# 	git-workbranch-util err "Cjjnnot remove brnach as it has changed
+# 	# 	git-workbranch-util err "Cannot remove branch as it has changed
 # 	local branch_path="$(git-workbranch-util branch-path)"
 # 	if [ -n "$(git-workbranch-util has-changes "$branch_path")" ]; then
-# 		git-workbranch-util err "Cannot remove branch, as it has uncommited local changes"
+# 		git-workbranch-util err "Cannot remove branch, as it has uncommitted local changes"
 # 		git status --porcelain
 # 		git-workbranch-util tip "Run 'git commit -a' to commit outstanding changes"
 # 		exit 1
@@ -365,7 +365,7 @@ function git-workbranch-archive {
 	# 	git-workbranch-util log "Cleaning up makefile"
 	# 	make clean
 	# fi
-	echo $PWD
+	echo "$PWD"
 	local current_directory
 	current_directory=$(basename "$PWD")
 	env -C "$(dirname "$PWD")" apack "$(basename "$PWD").tar.xz"  "$(basename "$PWD")"
@@ -381,18 +381,18 @@ function git-workbranch-util {
 	archive)
 		shift
 		local branch_path="$(git-workbranch-util branch-path)"
-		local branch_basename="$(basename $branch_path)"
+		local branch_basename="$(basename "$branch_path")"
 		local archive_name="$branch_basename.$(date +"%Y%m%dT%H%M%S%3N").tar.bz2"
 		local excludes="$(mktemp git-workbranch-excludes-XXXX.lst)"
 		echo "$excludes"
 		touch "$excludes"
 		for item in .gitgnore "$HOME/.gitignore"; do
-			if [ -e "$item" ]; then cat $item >> "$excludes"; fi
+			if [ -e "$item" ]; then cat "$item" >> "$excludes"; fi
 		done
 		# FIXME: That doesn't work, that still takes a complete archive
-		env -C "$(dirname $branch_path)" tar --exclude-from="$(realpath "$excludes")" -cJvf "$archive_name" "$branch_basename"
-		unlink $excludes
-		echo $(realpath $(dirname $branch_path)/$archive_name)
+		env -C "$(dirname "$branch_path")" tar --exclude-from="$(realpath "$excludes")" -cJvf "$archive_name" "$branch_basename"
+		unlink "$excludes"
+		echo $(realpath $(dirname "$branch_path")/"$archive_name")
 	;;
 	branch-path)
 		shift
@@ -425,7 +425,7 @@ function git-workbranch-util {
 		for item in $(git status --porcelain | cut -c 3-); do
 			if [ -e "$item/.git" ]; then
 				for subitem in $(git -C "$item" status --porcelain | cut -c 3-); do
-					echo -e "$BOLD"$item"$RESET"/$subitem
+					echo -e "$BOLD""$item""$RESET"/"$subitem"
 				done
 			else
 				echo "$item"

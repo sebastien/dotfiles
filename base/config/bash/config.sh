@@ -58,7 +58,7 @@ if [ -z "$BASH_CONFIG_LOADED" ]; then
 
 
 
-	if [ ! -z "$(which jj 2> /dev/null)" ]; then
+	if which jj 2> /dev/null; then
 		source <(jj util completion bash)
 	fi
 	for completion in $BASH_BASE/completion.*.sh; do

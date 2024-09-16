@@ -71,7 +71,7 @@ def get_new_commit_messages(parent_branch: str | None = None):
         commit.split()[1] for commit in new_commits.split("\n") if commit
     ]
 
-    categories: dict[str, dict[str, list[str]]] = {}
+    categories: dict[str, dict[str, dict[str, list[str]]]] = {}
     for commit_hash in new_commit_hashes:
         commit_message = run_command(
             "git", "log", "--format=%B", "-n", "1", commit_hash
@@ -85,17 +85,18 @@ def get_new_commit_messages(parent_branch: str | None = None):
                 description = match.group("description")
                 category = nearest(category, CATEGORIES)
                 category = NORMCATEGORIES.get(category, category)
-                categories.setdefault(category, {}).setdefault(scope, []).append(
-                    f"{description} ({commit_hash})".strip()
-                )
+                if description.strip():
+                    categories.setdefault(category, {}).setdefault(
+                        scope, {}
+                    ).setdefault(description.strip(), []).append(commit_hash)
         if not matched:
             print(f"!!! ERR Cannot parse message: {repr(commit_message)}")
     categories = {k: categories[k] for k in CATEGORIES if k in categories}
     for category, scopes in categories.items():
         print(f"\n## {category}\n")
         for scope in sorted(scopes):
-            for message in scopes[scope]:
-                print(f"   - `{scope}`: {message}")
+            for message, hashes in scopes[scope].items():
+                print(f"   - `{scope}`: {message} ({'/'.join(hashes)})")
 
 
 def get_commit_info(parent_branch: str | None = None):

@@ -25,3 +25,5 @@ $env.config = {
      }
 
 # EOF
+
+use '/home/spierre/.config/broot/launcher/nushell/br' *

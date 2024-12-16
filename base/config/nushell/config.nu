@@ -26,4 +26,4 @@ $env.config = {
 
 # EOF
 
-use '/home/sebastien/.config/broot/launcher/nushell/br' *
+use '~/.config/broot/launcher/nushell/br' *

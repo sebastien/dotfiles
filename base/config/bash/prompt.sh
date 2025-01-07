@@ -145,7 +145,11 @@ function prompt-right {
 	# This is the disk capacity in %
 	stat_hdd_capacity=$(df -h . | tail -n1 | awk '{print $5}')
 	# This is the memory left in kB
-	stat_mem_free=$(cat /proc/meminfo | grep MemFree | awk '{print $2}')
+	if [ -e "/proc/meminfo" ]; then
+		stat_mem_free=$(cat /proc/meminfo | grep MemFree | awk '{print $2}')
+	else
+		state_mem_free=""
+	fi
 	# FROM: https://stackoverflow.com/questions/9229333/how-to-get-overall-cpu-usage-e-g-57-on-linux#9229580
 	# NOTE: I tried different options and used the one that's the fastest. We don't
 	# want thr prompt to take too long.

@@ -7,6 +7,14 @@ color-modes=true
 line-number = "relative"
 mouse = false
 
+[keys.normal]
+"0" = "goto_line_start"
+"$" = "goto_line_end"
+
+[keys.select]
+"0" = "goto_line_start"
+"$" = "goto_line_end"
+
 [editor.cursor-shape]
 insert = "bar"
 normal = "block"

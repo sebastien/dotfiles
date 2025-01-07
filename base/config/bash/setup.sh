@@ -10,6 +10,9 @@ if [ ! -d "$HOME/.fzf" ]; then
 	~/.fzf/install
 	echo "DONE!"
 fi
+if [ -e "$HOME/.local/bin/mise" ]; then
+	eval "$(~/.local/bin/mise activate bash)"
+fi
 # SEE: https://github.com/lincheney/fzf-tab-completion#bash
 # if [ ! -d "$HOME/.config/bash/fzf-completion.sh" ]; then
 # 	source "$HOME/.config/bash/fzf-completion.sh" 

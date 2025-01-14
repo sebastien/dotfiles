@@ -1,0 +1,10 @@
+[user]
+name = "Sebastien Pierre"
+email = "sebastien.pierre@gmail.com"
+
+[aliases]
+sm = ["bookmark", "set", "main"]
+gp = ["git", "push"]
+
+[ui]
+default-command = "status"

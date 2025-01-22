@@ -10,13 +10,19 @@ export DENO_INSTALL="$HOME/.deno"
 export BUN_INSTALL="$HOME/.bun"
 export SINK_DIFF="nvim -d"
 export TERM_MULTIPLEXER=tmux
+if [ -e "/opt/homebrew/bin/brew" ]; then
+	eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
 if [ -e "$HOME/Workspace/data" ]; then
 	export DATA_PATH="$HOME/Workspace/data"
 fi
 LOCAL_PATH="$DENO_INSTALL/bin:$GOPATH/bin:$NPM_PACKAGES/bin/:$HOME/.cargo/bin:$BUN_INSTALL/bin:$HOME/.codon/bin:$HOME/.nimble/bin"
+if [ -e "$HOME/.local/bin/" ]; then
+	LOCAL_PATH+=":$HOME/.local/bin"
+fi
 if [ -e "$HOME/.local/src/Nim" ]; then
 	export NIM_PATH="$HOME/.local/src/Nim"
-	LOCAL_PATH="$LOCAL_PATH:$NIM_PATH/bin"
+	LOCAL_PATH+=":$NIM_PATH/bin"
 fi
 export PATH="$LOCAL_PATH:$PATH"
 
@@ -30,5 +36,7 @@ function use-openrouter {
 	export OPENAI_API_BASE=""
 }
 
+export OLLAMA_API_BASE=http://127.0.0.1:11434 
 use-openai
+
 # EOF

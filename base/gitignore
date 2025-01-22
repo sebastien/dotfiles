@@ -17,6 +17,7 @@ __pycache__
 run
 build
 dist
+*.secrets.sh
 .secrets
 .secrets.*
 .mypy_cache

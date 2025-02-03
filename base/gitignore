@@ -1,4 +1,5 @@
 .pyre
+.terraform
 .circleci/update_check.yml
 .circleci/cli.yml
 *.key

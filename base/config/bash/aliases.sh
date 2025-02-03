@@ -9,7 +9,9 @@ alias pk-rem="sudo dnf uninstall"
 alias pk-fd="sudo dnf search"
 # alias pk-ls="sudo dpkg -L"
 alias ned="nota-edit"
-alias open="gnome-open"
+if [ -n "$(which gnome-open)" ]; then
+	alias open="gnome-open"
+fi
 alias realias="source $HOME/.config/bash/aliases.sh"
 alias do-release-upgrade="sudo dnf --refresh upgrade;sudo dnf system-upgrade --releasever="
 alias jsonpp="python3 -m json.tool"

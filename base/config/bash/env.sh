@@ -12,6 +12,8 @@ export SINK_DIFF="nvim -d"
 export TERM_MULTIPLEXER=tmux
 if [ -e "/opt/homebrew/bin/brew" ]; then
 	eval "$(/opt/homebrew/bin/brew shellenv)"
+	export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"
+	export CPPFLAGS+=" -I/opt/homebrew/opt/openjdk/include"
 fi
 if [ -e "$HOME/Workspace/data" ]; then
 	export DATA_PATH="$HOME/Workspace/data"
@@ -36,7 +38,7 @@ function use-openrouter {
 	export OPENAI_API_BASE=""
 }
 
-export OLLAMA_API_BASE=http://127.0.0.1:11434 
+export OLLAMA_API_BASE=http://127.0.0.1:11434
 use-openai
 
 # EOF

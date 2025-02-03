@@ -57,8 +57,14 @@ if [ -z "$BASH_CONFIG_LOADED" ]; then
 	load-source "$HOME/.sdkman/bin/sdkman-init.sh" silent
 	load-source "$HOME/.config/broot/launcher/bash/br"
 
+	OS=$(uname)
 	for completion in $BASH_BASE/completion.*.sh; do
-		load-source "$completion"
+		# For some reason FZF completion doesn't work in Darwin
+		if [ "$completion" == "fzf" ] && [ "$OS" == "Darwin" ]; then
+			pass=
+		else
+			load-source "$completion"
+		fi
 	done
 
 	if [ -s "$(which direnv 2>/dev/null)" ]; then eval "$(direnv hook bash)"; fi

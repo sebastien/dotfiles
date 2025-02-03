@@ -12,7 +12,7 @@ if [ ! -d "$HOME/.fzf" ]; then
 fi
 
 APP_MISE="$(which mise 2>/dev/null)"
-if [ -n "$APP_MISE" ]; then
+if [ -n "$APP_MISE" ] && [ -e "$APP_MISE" ]; then
 	eval "$($APP_MISE activate bash)"
 fi
 

@@ -9,7 +9,7 @@ alias pk-rem="sudo dnf uninstall"
 alias pk-fd="sudo dnf search"
 # alias pk-ls="sudo dpkg -L"
 alias ned="nota-edit"
-if [ -n "$(which gnome-open)" ]; then
+if [ -n "$(which gnome-open 2>/dev/null)" ]; then
 	alias open="gnome-open"
 fi
 alias realias="source $HOME/.config/bash/aliases.sh"

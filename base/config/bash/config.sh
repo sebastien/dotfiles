@@ -69,6 +69,11 @@ if [ -z "$BASH_CONFIG_LOADED" ]; then
 
 	if [ -s "$(which direnv 2>/dev/null)" ]; then eval "$(direnv hook bash)"; fi
 
+	# We set SSH_TTY for nvim
+	if [ -z "$SSH_TTY" ] && [ -n "$ET_VERSION" ]; then
+		export SSH_TTY=$(tty)
+	fi
+
 fi
 
 # EOF

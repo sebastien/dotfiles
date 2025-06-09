@@ -28,13 +28,13 @@ uninstall:
 		fi
 	done
 
-$(HOME)/.%: $(PROFILE)/%
+$(HOME)/.%: $(PROFILE)/% .FORCE
 	@if [ -f "$@" ] || [ -d "$@" ]; then mv "$@" "$(call mkdir-parent,$(BASE)backup/$(NOW)/$*)"; fi
 	@if [ ! -d "$(dir $@)" ]; then mkdir -p "$(dir $@)"; fi
 	@ln -sfr $< "$@"
 	$(info Installed $< as $@)
 
-$(HOME)/.local/bin/%: bin/%
+$(HOME)/.local/bin/%: bin/% .FORCE
 	@if [ -f "$@" ] || [ -d "$@" ]; then mv "$@" "$(call mkdir-parent,$(BASE)backup/$(NOW)/$*)"; fi
 	@if [ ! -d "$(dir $@)" ]; then mkdir -p "$(dir $@)"; fi
 	@ln -sfr $< "$@"
@@ -49,5 +49,6 @@ base/config/bash/preexec.sh:
 print-%:
 	$(info $*=$(subst $(SPACE),$(NEWLINE),$($*)))
 
+.FORCE:
 .ONESHELL:
 # EOF

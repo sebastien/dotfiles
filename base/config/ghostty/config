@@ -9,23 +9,26 @@ foreground = f7f7f7
 cursor-color = 0087ff
 cursor-style = block
 cursor-style-blink = true
+macos-titlebar-style = tabs
 
 # Comments start with a `#` and are only valid on their own line.
 # Blank lines are ignored!
 
 keybind = ctrl+shift+x=close_surface
+keybind = ctrl+shift+z=toggle_fullscreen
 keybind = ctrl+shift+e=new_split:right
-keybind = ctrl+shift+q=new_split:left
-keybind = ctrl+shift+w=new_split:up
-keybind = ctrl+shift+s=new_split:down
+keybind = ctrl+shift+q=new_split:down
 keybind = ctrl+shift+plus=increase_font_size:1
 keybind = ctrl+shift+0=reset_font_size
 keybind = ctrl+shift+minus=decrease_font_size:1
 
 # Empty values reset the configuration to the default value
-font-family = "IosevkaTerm NFM"
+# MacOS
+font-family = "IosevkaTerm Nerd Font Mono"
+# font-family = "Pragmasevka_NF Nerd Font"
+# font-family = "IosevkaTerm NFM"
 # font-family = "IosevkaTerm NFM Thin"
-# font-family = "PragmataPro NerdFont"
+# font-family = "PragmataPro Nerd Font"
 # font-family = "Pragmasevka_NF"
 
 # EOF

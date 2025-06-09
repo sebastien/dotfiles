@@ -18,7 +18,7 @@ case $HOSTNAME in
 bench*)
 	HOSTICON="🧰 "
 	;;
-?renade*)
+?renade*|?osmos*)
 	HOSTICON="💻 "
 	;;
 central*)
@@ -30,10 +30,7 @@ cerise*)
 X1T*)
 	HOSTICON="📓 "
 	;;
-nzx*)
-	HOSTICON="🏦 "
-	;;
-NZX*)
+AL-*)
 	HOSTICON="🏦 "
 	;;
 esac
@@ -49,7 +46,7 @@ function strip-prompt() {
 
 function palette {
 	for C in {0..255}; do
-		tput setab $C
+		tput setab "$C"
 		echo -n "$C "
 	done
 	tput sgr0

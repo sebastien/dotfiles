@@ -27,3 +27,4 @@ $env.config = {
 # EOF
 
 use '~/.config/broot/launcher/nushell/br' *
+source "$HOME/.cargo/env.nu"

@@ -1,9 +1,11 @@
 .pyre
+.opencode
 .jj
 .terraform
 .secrets.env.sh
 .circleci/update_check.yml
 .circleci/cli.yml
+.conform.*
 *.privkey
 *.so
 *.pyc
@@ -12,7 +14,10 @@
 *.cache
 *cache__
 *.swp
+*.log
+*.jar
 .mypy_cache
+/*/.mypy_cache
 __pycache__
 run
 build

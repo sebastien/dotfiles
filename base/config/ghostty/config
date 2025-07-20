@@ -29,3 +29,4 @@ font-family = "IosevkaTerm NFM"
 # font-family = "Pragmasevka_NF"
 
 # EOF
+keybind = shift+enter=text:\n

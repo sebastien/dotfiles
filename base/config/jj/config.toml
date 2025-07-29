@@ -1,15 +1,42 @@
+# SEE: https://andre.arko.net/2025/09/28/stupid-jj-tricks/
 [user]
 name = "Sebastien Pierre"
 email = "sebastien.pierre@gmail.com"
 
 [aliases]
 sm = ["bookmark", "set", "main"]
+tm = ["bookmark", "track", "main", "origin@main"]
 b = ["bookmark", "set"]
 gp = ["git", "push"]
 gf = ["git", "fetch"]
+# Moves the closest bookmark to the latest
+tug = ["bookmark", "move", "--from", "heads(::@- & bookmarks())", "--to", "@-"]
+# Creates a PR
+pr = ["util", "exec", "--", "bash", "-c", """
+gh pr create --head $(jj log -r 'closest_bookmark(@)' -T 'bookmarks' --no-graph | cut -d ' ' -f 1)
+"""]
+
 
 [ui]
 default-command = "status"
+diff-editor = "nvimdiff"
+merge-editor = "nvimdiff"
+
+[[--scope]]
+--when.repositories = ["~/Workspace/AdviceLink/"]
+[--scope.user]
+email = "sebastien@advicelink.co.nz"
+
+[[--scope]]
+--when.commands = ["diff", "show"]
+
+# NOTE: Or difftastic
+[--scope.ui]
+pager = "delta"
+diff-formatter = ":git"
+
 
 [git]
 auto-local-bookmark = true
+
+# EOF

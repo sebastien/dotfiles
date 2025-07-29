@@ -23,11 +23,8 @@ keybind = ctrl+shift+0=reset_font_size
 keybind = ctrl+shift+minus=decrease_font_size:1
 
 # Empty values reset the configuration to the default value
-# MacOS
-font-family = "IosevkaTerm Nerd Font Mono"
-# font-family = "Pragmasevka_NF Nerd Font"
 # font-family = "IosevkaTerm NFM"
-# font-family = "IosevkaTerm NFM Thin"
+font-family = "IosevkaTerm NFM Light"
 # font-family = "PragmataPro Nerd Font"
 # font-family = "Pragmasevka_NF"
 

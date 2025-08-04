@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import os
 import stat
 import time
@@ -8,48 +8,54 @@ from typing import Iterator, Iterable
 
 
 IGNORES: list[str] = [
-    ".git",
-    "__pycache__",
-    ".cache",
-    "build",
-    "dist",
-    "*.pyc",
-    "node_modules",
-    "venv",
+	".git",
+	"__pycache__",
+	".cache",
+	"build",
+	"dist",
+	"*.pyc",
+	"node_modules",
+	"venv",
 ]
 
 for path in [os.path.join(os.getenv("HOME", "."), ".gitignore"), ".gitignore"]:
-    if os.path.exists(path):
-        with open(path, "rt") as f:
-            lines = (_[:-1].strip() for _ in f.readlines())
-            IGNORES += [_ for _ in lines if not _.startswith("#")]
+	if os.path.exists(path):
+		with open(path, "rt") as f:
+			lines = (_[:-1].strip() for _ in f.readlines())
+			IGNORES += [_ for _ in lines if not _.startswith("#")]
 
 
 def is_ignored(name: str) -> bool:
-    for ignore in IGNORES:
-        if fnmatch.fnmatch(name, ignore):
-            return True
-    return False
+	for ignore in IGNORES:
+		if fnmatch.fnmatch(name, ignore):
+			return True
+	return False
 
 
 def catalogue(path: str) -> Iterator[tuple[float, str]]:
-    skipped = set()
-    for dirpath, dirnames, filenames in os.walk(path):
-        if dirpath in skipped:
-            for name in dirnames:
-                skipped.add(os.path.join(dirpath, name))
-        else:
-            for name in dirnames:
-                if is_ignored(name):
-                    skipped.add(os.path.join(dirpath, name))
-            for name in filenames:
-                for ignore in IGNORES:
-                    if fnmatch.fnmatch(name, ignore):
-                        continue
-                p = os.path.join(dirpath, name)
-                if os.path.isfile(p):
-                    t = os.stat(p)[stat.ST_MTIME]
-                    yield (t, p)
+	if os.path.isfile(path):
+		if not is_ignored(os.path.basename(path)):
+			t = os.stat(path)[stat.ST_MTIME]
+			yield (t, path)
+		return
+
+	skipped = set()
+	for dirpath, dirnames, filenames in os.walk(path):
+		if dirpath in skipped:
+			for name in dirnames:
+				skipped.add(os.path.join(dirpath, name))
+		else:
+			for name in dirnames:
+				if is_ignored(name):
+					skipped.add(os.path.join(dirpath, name))
+			for name in filenames:
+				for ignore in IGNORES:
+					if fnmatch.fnmatch(name, ignore):
+						continue
+				p = os.path.join(dirpath, name)
+				if os.path.isfile(p):
+					t = os.stat(p)[stat.ST_MTIME]
+					yield (t, p)
 
 
 MINUTES = 60.0
@@ -58,35 +64,35 @@ DAYS = HOURS * 24
 WEEKS = DAYS * 7.0
 MONTHS = WEEKS * 4.1
 PERIODS = {
-    "months": MONTHS,
-    "weeks": WEEKS,
-    "days": DAYS,
-    "hours": HOURS,
-    "minutes": MINUTES,
+	"months": MONTHS,
+	"weeks": WEEKS,
+	"days": DAYS,
+	"hours": HOURS,
+	"minutes": MINUTES,
 }
 
 
 def since(before: float, now: float) -> str:
-    delta = now - before
-    for key, period in PERIODS.items():
-        if delta > period:
-            return f"{delta/period:0.1f} {key} ago"
-    return f"{delta:0.1f} seconds ago"
+	delta = now - before
+	for key, period in PERIODS.items():
+		if delta > period:
+			return f"{delta / period:0.1f} {key} ago"
+	return f"{delta:0.1f} seconds ago"
 
 
 def recent(paths: str | Iterable[str], now: float | None = None) -> Iterator[str]:
-    t: float = now or time.time()
-    l: list[tuple[float, str]] = []
-    for _ in (paths,) if isinstance(paths, str) else paths:
-        for _ in catalogue(_):
-            l.append(_)
-    for mtime, path in sorted(l):
-        yield f"{since(mtime, t):20s}{path}"
+	t: float = now or time.time()
+	l: list[tuple[float, str]] = []
+	for _ in (paths,) if isinstance(paths, str) else paths:
+		for _ in catalogue(_):
+			l.append(_)
+	for mtime, path in sorted(l):
+		yield f"{since(mtime, t):20s}{path}"
 
 
 if __name__ == "__main__":
-    for line in recent(sys.argv[1:] or (".",)):
-        sys.stdout.write(line)
-        sys.stdout.write("\n")
+	for line in recent(sys.argv[1:] or (".",)):
+		sys.stdout.write(line)
+		sys.stdout.write("\n")
 
 # EOF

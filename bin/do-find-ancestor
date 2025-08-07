@@ -1,0 +1,78 @@
+#!/bin/bash
+
+if [ $# -ne 1 ]; then
+    echo "Usage: $0 FILE" >&2
+    echo "Search for FILE (name, glob, or partial match) walking backwards from current directory to root" >&2
+    exit 1
+fi
+
+FILE="$1"
+current_dir="$(pwd)"
+found=false
+
+# Color codes
+if [ -z "$NOCOLOR" ]; then
+    RED='\033[0;31m'
+    NC='\033[0m' # No Color
+else
+    RED=''
+    NC=''
+fi
+
+# Function to highlight matching part
+highlight_match() {
+    local filepath="$1"
+    local pattern="$2"
+    local filename=$(basename "$filepath")
+    local dirname=$(dirname "$filepath")
+    
+    if [ -z "$NOCOLOR" ] && [[ "$filename" == *"$pattern"* ]]; then
+        # Replace the pattern with highlighted version
+        local highlighted_filename="${filename//$pattern/${RED}${pattern}${NC}}"
+        echo -e "${dirname}/${highlighted_filename}"
+    else
+        echo "$filepath"
+    fi
+}
+
+while true; do
+    # Try exact match or glob first
+    if compgen -G "$current_dir/$FILE" > /dev/null 2>&1; then
+        for match in "$current_dir"/$FILE; do
+            if [ -e "$match" ]; then
+                highlight_match "$match" "$FILE"
+                found=true
+            fi
+        done
+    fi
+    
+    # Try partial match with wildcards (regular files)
+    shopt -s nullglob
+    for match in "$current_dir"/*"$FILE"*; do
+        if [ -e "$match" ]; then
+            highlight_match "$match" "$FILE"
+            found=true
+        fi
+    done
+    
+    # Try partial match with wildcards (hidden files)
+    shopt -s dotglob
+    for match in "$current_dir"/.*"$FILE"*; do
+        if [ -e "$match" ] && [ "$(basename "$match")" != "." ] && [ "$(basename "$match")" != ".." ]; then
+            highlight_match "$match" "$FILE"
+            found=true
+        fi
+    done
+    shopt -u dotglob nullglob
+    
+    if [ "$current_dir" = "/" ]; then
+        break
+    fi
+    
+    current_dir="$(dirname "$current_dir")"
+done
+
+if [ "$found" = false ]; then
+    echo "No match" >&2
+    exit 1
+fi

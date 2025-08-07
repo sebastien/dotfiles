@@ -1,0 +1,18 @@
+#!/usr/bin/env python2.7
+import os
+import sys
+import shutil
+
+args = sys.argv[1:]
+SOURCE = args[0]
+DEST = args[1]
+SCOPE = args[2:]
+for path in SCOPE:
+	if os.path.exists(path):
+		dirname = os.path.dirname(path)
+		basename = os.path.basename(path)
+		new_path = os.path.join(dirname, basename.replace(SOURCE, DEST))
+		if path != new_path:
+			print(path, "->", new_path)
+			shutil.move(path, new_path)
+# EOF - vim: ts=4 sw=4 noet

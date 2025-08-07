@@ -4,7 +4,12 @@ email = "sebastien.pierre@gmail.com"
 
 [aliases]
 sm = ["bookmark", "set", "main"]
+b = ["bookmark", "set"]
 gp = ["git", "push"]
+gf = ["git", "fetch"]
 
 [ui]
 default-command = "status"
+
+[git]
+auto-local-bookmark = true

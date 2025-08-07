@@ -28,4 +28,6 @@ dist
 .mypy_cache
 MANIFEST
 node_modules
+*/node_modules
+node_modules/*
 # gems

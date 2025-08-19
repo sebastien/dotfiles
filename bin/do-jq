@@ -1,0 +1,49 @@
+#!/usr/bin/env bun
+
+// Command: do-jq
+// A simpler JQ alternative, as I never can get `jq` to do simple queries.
+
+function* iwalk(value, query, offset = 0, path = []) {
+	if (offset == query.length) {
+		yield value
+		return
+	}
+	const expr = query[offset]
+	switch (value?.constructor) {
+		case Array:
+			//TODO: Support fnmatch
+			if (expr === "*") {
+				for (let i = 0; i < value.length; i++) {
+					yield* iwalk(value[i], query, offset + 1, [...path, i])
+				}
+			} else {
+				let i = parseInt(expr)
+				if (!isNaN(i) && i >= 0 && i < value.length) {
+					yield* iwalk(value[i], query, offset + 1, [...path, i])
+				}
+			}
+			break
+		case Object:
+			//TODO: Support fnmatch
+			if (expr === "*") {
+				for (const k in value) {
+					yield* iwalk(value[k], query, offset + 1, [...path, k])
+				}
+			} else {
+				yield* iwalk(value[expr], query, offset + 1, [...path, expr])
+			}
+			break
+		default:
+			break
+	}
+}
+
+const text = await Bun.stdin.text()
+const data = JSON.parse(text)
+const query = Bun.argv[2].split(".")
+for (const match of iwalk(data, query)) {
+	// TODO: Support raw text option
+	await Bun.stdout.write(JSON.stringify(match))
+}
+//
+// EOF - vim: ft=javascript

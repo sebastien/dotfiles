@@ -4,3 +4,9 @@ indent-width = 4
 [format]
 quote-style = "double"
 indent-style = "tab"
+
+
+[lint]
+ignore = ["W191"]
+
+# EOF

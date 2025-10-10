@@ -5,7 +5,7 @@ clipboard-write=allow
 
 # The syntax is "key = value". The whitespace around the
 # equals doesn't matter.
-theme = "Purple Rain"
+# theme = "Purple Rain"
 background = 062a38
 background-opacity = 0.90
 foreground = f7f7f7
@@ -24,10 +24,11 @@ keybind = ctrl+shift+q=new_split:down
 keybind = ctrl+shift+plus=increase_font_size:1
 keybind = ctrl+shift+0=reset_font_size
 keybind = ctrl+shift+minus=decrease_font_size:1
-
+theme = "Molokai"
 # Empty values reset the configuration to the default value
 # font-family = "IosevkaTerm NFM"
 font-family = "IosevkaTerm NFM Light"
+font-family-bold = "IosevkaTerm NFM Medium"
 # font-family = "PragmataPro Nerd Font"
 # font-family = "Pragmasevka_NF"
 

@@ -19,8 +19,8 @@ gh pr create --head $(jj log -r 'closest_bookmark(@)' -T 'bookmarks' --no-graph 
 
 [ui]
 default-command = "status"
-diff-editor = "nvimdiff"
-merge-editor = "nvimdiff"
+# diff-editor = "nvimdiff"
+# merge-editor = "nvimdiff"
 
 [[--scope]]
 --when.repositories = ["~/Workspace/AdviceLink/"]
@@ -30,13 +30,14 @@ email = "sebastien@advicelink.co.nz"
 [[--scope]]
 --when.commands = ["diff", "show"]
 
-# NOTE: Or difftastic
 [--scope.ui]
+# NOTE: delta or difftastic
+# pager = "difftastic"
 pager = "delta"
 diff-formatter = ":git"
 
-
-[git]
-auto-local-bookmark = true
+# SEE: https://docs.jj-vcs.dev/latest/config/#automatic-tracking-of-bookmarks
+[remotes.origin]
+auto-track-bookmarks = "glob:*"
 
 # EOF

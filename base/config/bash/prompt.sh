@@ -15,10 +15,10 @@
 HAS_MPSTAT=$(which mpstat 2>/dev/null)
 
 case $HOSTNAME in
-bench*)
+*bench*)
 	HOSTICON="🧰 "
 	;;
-?renade*|?osmos*)
+?renade* | ?osmos*)
 	HOSTICON="💻 "
 	;;
 central*)
@@ -158,8 +158,10 @@ function prompt-right {
 
 if [ -z "$SHELL_TYPE" ] || [[ "$SHELL_TYPE" == "bash" ]]; then
 	function prompt() {
+		history -a
+		history -c
+		history -r
 		# If we have cd-store, we call it
-
 		prompt-setup
 		prompt_left="$(prompt-left)"
 		prompt_right="$(prompt-right)"

@@ -4,6 +4,18 @@ set -o vi
 shopt -s extglob
 shopt -s checkwinsize
 
+# Avoid duplicates and ignore commands starting with space
+export HISTCONTROL=ignoreboth:erasedups
+# Increase history size
+export HISTSIZE=10000
+export HISTFILESIZE=20000
+# Append to history file instead of overwriting
+shopt -s histappend
+# Save multi-line commands as one entry
+shopt -s cmdhist
+# Save and reload history after each command
+export PROMPT_COMMAND="history -a; history -n; ${PROMPT_COMMAND}"
+
 export PYENV_ROOT="$HOME/.pyenv"
 if [ -e "$PYENV_ROOT" ]; then
 	command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
@@ -53,7 +65,9 @@ if [ -z "$BASH_CONFIG_LOADED" ]; then
 	# load-source "$BASH_BASE/preexec.sh"
 	load-source "$BASH_BASE/secrets.sh"
 	load-source "$BASH_BASE/prompt.sh"
-	# load-source "$BASH_BASE/extra.sh"
+	load-source "$BASH_BASE/extra.sh"
+	# This makes prompt fail all the time
+	# load-source "$BASH_BASE/sync-history.sh"
 	load-source "$HOME/Workspace/Perso/nota/src/sh/libnota.sh"
 	load-source "$HOME/.sdkman/bin/sdkman-init.sh" silent
 	load-source "$HOME/.config/broot/launcher/bash/br"

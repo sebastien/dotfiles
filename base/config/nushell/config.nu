@@ -28,3 +28,5 @@ $env.config = {
 
 use '~/.config/broot/launcher/nushell/br' *
 source "$HOME/.cargo/env.nu"
+
+use '/home/sebastien/.config/broot/launcher/nushell/br' *

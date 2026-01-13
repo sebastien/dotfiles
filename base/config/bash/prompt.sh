@@ -94,6 +94,7 @@ fi
 # ▒█~/W/tlang » ▓▒░cd appenv/    ⏲ default|1 ⑂ R103+|103 ⋐ tlang:projects:tdoc
 
 function scm-type {
+	jj root >/dev/null 2>/dev/null && echo '⌘' && return
 	git branch >/dev/null 2>/dev/null && echo '±' && return
 	hg root >/dev/null 2>/dev/null && echo '☿' && return
 	echo '○'
@@ -124,16 +125,37 @@ function prompt-right {
 	else
 		session_type=""
 	fi
-	# We get Git information
+	# We get SCM information (prefer jj over git)
 	scm_summary=""
-	git_branch=$(git branch --no-color -l 2>/dev/null)
-	if [ -n "$git_branch" ]; then
-		git_branch_count=$(echo "$git_branch" | wc -l)
-		git_branch_current=$(echo "$git_branch" | grep '*' | cut -d' ' -f2)
-		git_staged_count=$(git diff --cached --numstat | wc -l)
-		git_unstaged_count=$(git diff --numstat | wc -l)
-		git_rev_number=$(git rev-list --count HEAD)
-		scm_summary="\[$RESET\]\[$PURPLE_DK\]⟜\[$PURPLE\]\[$BOLD\]${git_branch_current}\[$RESET\]\[$PURPLE_DK\]⋲ \[$PURPLE\]${git_branch_count} $(scm-type)R\[$PURPLE_LT\]${git_rev_number}\[$BOLD\]+${git_unstaged_count}\[$RESET\]\[$PURPLE\]+${git_staged_count}\[$PURPLE_DK\]\[$RESET\]"
+	if jj root >/dev/null 2>/dev/null; then
+		# Jujutsu repository
+		jj_change=$(jj log --no-pager -r @ --no-graph -T 'change_id.shortest()' 2>/dev/null)
+		jj_bookmarks=$(jj log --no-pager -r @ --no-graph -T 'bookmarks.join(",")' 2>/dev/null)
+		jj_conflict=$(jj log --no-pager -r @ --no-graph -T 'if(conflict, "!")' 2>/dev/null)
+		jj_empty=$(jj log --no-pager -r @ --no-graph -T 'if(empty, "○", "●")' 2>/dev/null)
+		# Count modified files from jj status
+		jj_modified_count=$(jj diff --stat --no-pager 2>/dev/null | tail -1 | grep -oE '[0-9]+ file' | grep -oE '[0-9]+' || echo "0")
+		# Format: ⟜change_id bookmarks ●/○ +modified !conflict
+		jj_bookmark_display=""
+		if [ -n "$jj_bookmarks" ]; then
+			jj_bookmark_display=" \[$PURPLE_LT\]${jj_bookmarks}"
+		fi
+		jj_conflict_display=""
+		if [ -n "$jj_conflict" ]; then
+			jj_conflict_display=" \[$RED\]${jj_conflict}"
+		fi
+		scm_summary="\[$RESET\]\[$PURPLE_DK\]⟜\[$PURPLE\]\[$BOLD\]${jj_change}${jj_bookmark_display}\[$RESET\]\[$PURPLE_DK\] $(scm-type)${jj_empty}\[$PURPLE_LT\]\[$BOLD\]+${jj_modified_count}${jj_conflict_display}\[$RESET\]"
+	else
+		# Git repository
+		git_branch=$(git branch --no-color -l 2>/dev/null)
+		if [ -n "$git_branch" ]; then
+			git_branch_count=$(echo "$git_branch" | wc -l)
+			git_branch_current=$(echo "$git_branch" | grep '*' | cut -d' ' -f2)
+			git_staged_count=$(git diff --cached --numstat | wc -l)
+			git_unstaged_count=$(git diff --numstat | wc -l)
+			git_rev_number=$(git rev-list --count HEAD)
+			scm_summary="\[$RESET\]\[$PURPLE_DK\]⟜\[$PURPLE\]\[$BOLD\]${git_branch_current}\[$RESET\]\[$PURPLE_DK\]⋲ \[$PURPLE\]${git_branch_count} $(scm-type)R\[$PURPLE_LT\]${git_rev_number}\[$BOLD\]+${git_unstaged_count}\[$RESET\]\[$PURPLE\]+${git_staged_count}\[$PURPLE_DK\]\[$RESET\]"
+		fi
 	fi
 	if [ -n "$APPENV_STATUS" ] || [ -e ".appenv" ]; then
 		appenv_status=" \[$GOLD_DK\]$(if [ -e ".appenv" ]; then echo "▶"; else echo "▷"; fi)\[$GOLD\]$APPENV_STATUS\[$GOLD_DK\] "

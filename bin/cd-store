@@ -1,0 +1,198 @@
+#!/usr/bin/env bash
+# cd-store - Directory history management for quick navigation
+# Used by cd-search/z for quick directory jumping
+#
+# Usage:
+#   cd-store store [path]    - Store path (default: current directory) in history
+#   cd-store search [query]  - Search and select a directory using fzf
+#   cd-store last [query]    - Get the last visited directory (optionally matching query)
+#   cd-store log [query]     - Show directory history (optionally filtered)
+#   cd-store prune           - Remove non-existent paths from history
+#   cd-store entries         - Show entry count
+#   cd-store path            - Print the log file path
+#
+# For backwards compatibility, if no subcommand is given, defaults to 'store'
+
+set -euo pipefail
+
+CD_STORE_PATH="${CD_STORE_PATH:-$HOME/.cache/cd-history}"
+CD_LOG_PATH="${CD_LOG_PATH:-$CD_STORE_PATH/cdstore.log}"
+CD_LOG_MAX_ENTRIES="${CD_LOG_MAX_ENTRIES:-10000}"
+CD_EXT="git appenv hg gitmodules jj"
+
+# Ensure store directory exists
+ensure_store() {
+    if [ ! -d "$CD_STORE_PATH" ]; then
+        mkdir -p "$CD_STORE_PATH"
+    fi
+}
+
+# Store a directory in the log
+cmd_store() {
+    local path="${1:-$(pwd)}"
+    local timestamp=$(date +"%Y%m%d%H%M%S%3N")
+    
+    ensure_store
+    
+    # Trim log if too large
+    if [ -e "$CD_LOG_PATH" ] && [ "$(wc -l < "$CD_LOG_PATH")" -ge "$CD_LOG_MAX_ENTRIES" ]; then
+        local tmp=$(mktemp)
+        tail -n "$CD_LOG_MAX_ENTRIES" "$CD_LOG_PATH" > "$tmp"
+        mv -f "$tmp" "$CD_LOG_PATH"
+    fi
+    
+    # Detect metadata (which VCS/config files exist)
+    local meta=""
+    for ext in $CD_EXT; do
+        if [ -e "$path/.$ext" ]; then
+            if [ -z "$meta" ]; then
+                meta=$ext
+            else
+                meta+=" $ext"
+            fi
+        fi
+    done
+    
+    # Append entry to log
+    echo "$timestamp|$meta|$path" >> "$CD_LOG_PATH"
+}
+
+# Search for a directory using fzf
+# Returns the selected path (caller handles cd)
+cmd_search() {
+    local query="${1:-}"
+    
+    if [ ! -e "$CD_LOG_PATH" ]; then
+        echo "-!- No directory history found" >&2
+        return 1
+    fi
+    
+    local selection
+    if [ -z "$query" ]; then
+        selection=$(tac "$CD_LOG_PATH" | cut -d'|' -f3 | awk '!seen[$0]++' | fzf)
+    else
+        selection=$(tac "$CD_LOG_PATH" | cut -d'|' -f3 | awk '!seen[$0]++' | fzf --query "$query" --select-1 --exit-0)
+    fi
+    
+    if [ -n "$selection" ]; then
+        echo "$selection"
+    fi
+}
+
+# Get the last visited directory
+cmd_last() {
+    local query="${1:-}"
+    
+    if [ ! -e "$CD_LOG_PATH" ]; then
+        echo "."
+        return
+    fi
+    
+    if [ -z "$query" ]; then
+        tail -n1 "$CD_LOG_PATH" | cut -d'|' -f3
+    else
+        grep "$query" "$CD_LOG_PATH" | tail -n1 | cut -d'|' -f3
+    fi
+}
+
+# Show directory log
+cmd_log() {
+    local query="${1:-}"
+    
+    if [ ! -e "$CD_LOG_PATH" ]; then
+        echo "No directory log found" >&2
+        return 1
+    fi
+    
+    if [ -z "$query" ]; then
+        cat "$CD_LOG_PATH"
+    else
+        grep "$query" "$CD_LOG_PATH"
+    fi
+}
+
+# Prune non-existent paths from log
+cmd_prune() {
+    if [ ! -e "$CD_LOG_PATH" ]; then
+        echo "No log file to prune" >&2
+        return 1
+    fi
+    
+    local count_before=$(wc -l < "$CD_LOG_PATH")
+    local tmp=$(mktemp)
+    
+    while IFS= read -r line; do
+        local path=$(echo "$line" | cut -d'|' -f3)
+        if [ -e "$path" ]; then
+            echo "$line"
+        fi
+    done < "$CD_LOG_PATH" | tail -n "$CD_LOG_MAX_ENTRIES" > "$tmp"
+    
+    mv -f "$tmp" "$CD_LOG_PATH"
+    
+    local count_after=$(wc -l < "$CD_LOG_PATH")
+    echo "Pruned log: $count_before -> $count_after entries"
+}
+
+# Show entry count
+cmd_entries() {
+    if [ ! -e "$CD_LOG_PATH" ]; then
+        echo "0 entries (no log file)"
+        return
+    fi
+    
+    local count=$(wc -l < "$CD_LOG_PATH")
+    echo "$count entries in $CD_LOG_PATH"
+}
+
+# Print log file path
+cmd_path() {
+    echo "$CD_LOG_PATH"
+}
+
+# Main command dispatch
+main() {
+    local cmd="${1:-store}"
+    shift 2>/dev/null || true
+    
+    case "$cmd" in
+        store)
+            cmd_store "$@"
+            ;;
+        search)
+            cmd_search "$@"
+            ;;
+        last)
+            cmd_last "$@"
+            ;;
+        log)
+            cmd_log "$@"
+            ;;
+        prune)
+            cmd_prune
+            ;;
+        entries)
+            cmd_entries
+            ;;
+        path)
+            cmd_path
+            ;;
+        -h|--help|help)
+            head -n 14 "$0" | tail -n +2 | sed 's/^# //' | sed 's/^#//'
+            ;;
+        *)
+            # Backwards compatibility: if first arg is a path, treat as store
+            if [ -d "$cmd" ] || [ "$cmd" = "." ]; then
+                cmd_store "$cmd"
+            else
+                echo "Unknown command: $cmd" >&2
+                echo "Run 'cd-store --help' for usage" >&2
+                return 1
+            fi
+            ;;
+    esac
+}
+
+main "$@"
+
+# EOF

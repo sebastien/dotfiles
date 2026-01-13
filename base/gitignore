@@ -1,4 +1,6 @@
 .pyre
+*.tsbuildinfo
+opencodetmp
 .opencode
 .jj
 .terraform
@@ -30,4 +32,8 @@ MANIFEST
 node_modules
 */node_modules
 node_modules/*
+*.zip
+*.tar.gz
+*.tar.bz2
+*.tar.xz
 # gems

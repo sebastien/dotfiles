@@ -1,18 +1,196 @@
 #!/usr/bin/env python3
-import os
-import sys
-import shutil
+#
+# do-rename PAT FILE...
+#
+# Renames files by replacing placeholders in PAT with file components.
+# Placeholders: {base}, {name}, {ext}
+# Transforms: {name:upper}, {name:lower}, {name:capitalize}, {name:s/old/new/}
+# Chained: {name:capitalize:s/old/new/}
 
-args = sys.argv[1:]
-SOURCE = args[0]
-DEST = args[1]
-SCOPE = args[2:]
-for path in SCOPE:
-	if os.path.exists(path):
-		dirname = os.path.dirname(path)
-		basename = os.path.basename(path)
-		new_path = os.path.join(dirname, basename.replace(SOURCE, DEST))
-		if path != new_path:
-			print(path, "->", new_path)
-			shutil.move(path, new_path)
+import os
+import re
+import sys
+
+USAGE = """\
+Usage: do-rename [-d|--dry] PAT FILE...
+
+Renames files by replacing placeholders in PAT with file components.
+
+Placeholders:
+  {base}  - full basename (e.g., 'file.txt')
+  {name}  - filename without extension (e.g., 'file')
+  {ext}   - extension only (e.g., 'txt')
+
+Transforms (chained with ':'):
+  {name:upper}       - uppercase
+  {name:lower}       - lowercase
+  {name:capitalize}  - capitalize first letter
+  {name:s/old/new/}  - sed-like substitution (regex supported)
+
+Examples:
+  do-rename '{name}_backup.{ext}' *.txt
+  do-rename '{name:upper}.{ext}' *.jpg
+  do-rename '{name:s/old/new/}.{ext}' *.txt
+  do-rename '{name:lower:s/-/_/}.{ext}' *.TXT
+  do-rename -d '{name:capitalize}.{ext}' *
+
+Options:
+  -d, --dry   Dry run (show what would be renamed without doing it)
+  -h, --help  Show this help message
+"""
+
+# Regex to match placeholders: {base}, {name:upper}, {name:s/old/new/:lower}, etc.
+PLACEHOLDER_RE = re.compile(r"\{(base|name|ext)((?::[^}:]+)*)\}")
+
+# Regex to match sed-like substitution: s/old/new/ or s|old|new|
+SED_RE = re.compile(r"^s(.)(.+?)\1(.*)?\1$")
+
+
+def parse_filename(path):
+    """Return (dir, base, name, ext) for a file path.
+
+    Examples:
+      'dir/photo.jpg'  -> ('dir', 'photo.jpg', 'photo', 'jpg')
+      'Makefile'       -> ('', 'Makefile', 'Makefile', '')
+      '.bashrc'        -> ('', '.bashrc', '.bashrc', '')
+      'file.tar.gz'    -> ('', 'file.tar.gz', 'file.tar', 'gz')
+    """
+    dir_part = os.path.dirname(path)
+    base = os.path.basename(path)
+
+    # Handle dotfiles and files without extension
+    if base.startswith(".") and "." not in base[1:]:
+        # Dotfile without extension: .bashrc
+        name, ext = base, ""
+    elif "." in base:
+        # Regular file with extension
+        name, ext = base.rsplit(".", 1)
+        # Handle case where name would be empty (e.g., '.txt' alone)
+        if not name:
+            name, ext = base, ""
+    else:
+        # No extension: Makefile
+        name, ext = base, ""
+
+    return dir_part, base, name, ext
+
+
+def apply_transform(value, transform):
+    """Apply a single transform to value.
+
+    Transforms:
+      'upper'      -> value.upper()
+      'lower'      -> value.lower()
+      'capitalize' -> value.capitalize()
+      's/old/new/' -> re.sub(old, new, value)
+    """
+    if transform == "upper":
+        return value.upper()
+    elif transform == "lower":
+        return value.lower()
+    elif transform == "capitalize":
+        return value.capitalize()
+    else:
+        # Try sed-like substitution
+        match = SED_RE.match(transform)
+        if match:
+            _, pattern, replacement = match.groups()
+            replacement = replacement or ""
+            return re.sub(pattern, replacement, value)
+        else:
+            sys.stderr.write(f"[!] Unknown transform: {transform}\n")
+            return value
+
+
+def expand_placeholder(match, base, name, ext):
+    """Expand a single placeholder match."""
+    var_name = match.group(1)
+    transforms_str = match.group(2)  # e.g., ':upper:s/a/b/' or ''
+
+    # Get base value
+    values = {"base": base, "name": name, "ext": ext}
+    value = values.get(var_name, "")
+
+    # Apply transforms if any
+    if transforms_str:
+        # Split by ':' but skip the first empty element
+        transforms = transforms_str.split(":")[1:]
+        for transform in transforms:
+            if transform:
+                value = apply_transform(value, transform)
+
+    return value
+
+
+def expand_pattern(pattern, base, name, ext):
+    """Replace all {placeholder:transforms} in pattern."""
+    return PLACEHOLDER_RE.sub(
+        lambda m: expand_placeholder(m, base, name, ext), pattern
+    )
+
+
+def main():
+    args = sys.argv[1:]
+
+    # Parse options
+    dry_run = False
+    while args and args[0].startswith("-"):
+        opt = args.pop(0)
+        if opt in ("-d", "--dry"):
+            dry_run = True
+        elif opt in ("-h", "--help"):
+            print(USAGE)
+            sys.exit(0)
+        elif opt == "--":
+            break
+        else:
+            sys.stderr.write(f"[!] Unknown option: {opt}\n")
+            sys.exit(1)
+
+    # Need at least pattern and one file
+    if len(args) < 2:
+        print(USAGE)
+        sys.exit(1)
+
+    pattern = args[0]
+    files = args[1:]
+
+    for filepath in files:
+        if not os.path.exists(filepath):
+            sys.stderr.write(f"[!] File not found: {filepath}\n")
+            continue
+
+        dir_part, base, name, ext = parse_filename(filepath)
+
+        # Expand the pattern
+        new_base = expand_pattern(pattern, base, name, ext)
+
+        # Build new path
+        if dir_part:
+            new_path = os.path.join(dir_part, new_base)
+        else:
+            new_path = new_base
+
+        # Skip if no change
+        if filepath == new_path:
+            continue
+
+        # Check for conflicts
+        if os.path.exists(new_path):
+            sys.stderr.write(
+                f"[!] Skipping {filepath}: target '{new_path}' already exists\n"
+            )
+            continue
+
+        # Rename or dry-run
+        if dry_run:
+            print(f"{filepath} -> {new_path} (dry run)")
+        else:
+            os.rename(filepath, new_path)
+            print(f"{filepath} -> {new_path}")
+
+
+if __name__ == "__main__":
+    main()
+
 # EOF - vim: ts=4 sw=4 noet

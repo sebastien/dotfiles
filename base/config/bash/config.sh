@@ -4,17 +4,7 @@ set -o vi
 shopt -s extglob
 shopt -s checkwinsize
 
-# Avoid duplicates and ignore commands starting with space
-export HISTCONTROL=ignoreboth:erasedups
-# Increase history size
-export HISTSIZE=10000
-export HISTFILESIZE=20000
-# Append to history file instead of overwriting
-shopt -s histappend
-# Save multi-line commands as one entry
-shopt -s cmdhist
-# Save and reload history after each command
-export PROMPT_COMMAND="history -a; history -n; ${PROMPT_COMMAND}"
+# NOTE: History settings are in sync-history.sh
 
 export PYENV_ROOT="$HOME/.pyenv"
 if [ -e "$PYENV_ROOT" ]; then
@@ -29,10 +19,7 @@ if [ -z "$BASH_CONFIG_LOADED" ]; then
 	# FROM <https://opensource.com/article/20/3/fish-shell>
 	export GREP_OPTIONS="--color=auto"     # make grep colorful
 	export LSCOLORS=gxfxbEaEBxxEhEhBaDaCaD # make ls more colorful as well
-	export HISTSIZE=32768                  # Larger bash history (allow 32³ entries; default is 500)
-	export HISTFILESIZE=$HISTSIZE
-	export HISTCONTROL=ignoredups                         # Remove duplicates from history. I use `git status` a lot.
-	export HISTIGNORE="ls:cd:cd -:pwd:exit:date:* --help" # Make some commands not show up in history
+	# NOTE: History settings are in sync-history.sh
 	export LANG="en_US.UTF-8"                             # Language formatting is still important
 	export LC_ALL="en_US.UTF-8"                           # byte-wise sorting and force language for those pesky apps
 	export MANPAGER="less -X"                             # Less is more
@@ -66,8 +53,8 @@ if [ -z "$BASH_CONFIG_LOADED" ]; then
 	load-source "$BASH_BASE/secrets.sh"
 	load-source "$BASH_BASE/prompt.sh"
 	load-source "$BASH_BASE/extra.sh"
-	# This makes prompt fail all the time
-	# load-source "$BASH_BASE/sync-history.sh"
+	# Session-prioritized history (up/down = current session, Ctrl-R = all sessions)
+	load-source "$BASH_BASE/sync-history.sh"
 	load-source "$HOME/Workspace/Perso/nota/src/sh/libnota.sh"
 	load-source "$HOME/.sdkman/bin/sdkman-init.sh" silent
 	load-source "$HOME/.config/broot/launcher/bash/br"

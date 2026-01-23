@@ -6,6 +6,7 @@ email = "sebastien.pierre@gmail.com"
 [aliases]
 sm = ["bookmark", "set", "main"]
 tm = ["bookmark", "track", "main", "origin@main"]
+l = ["log", "-r", "all()"]
 b = ["bookmark", "set"]
 gp = ["git", "push"]
 gf = ["git", "fetch"]

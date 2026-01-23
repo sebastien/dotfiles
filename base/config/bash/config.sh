@@ -38,9 +38,10 @@ if [ -z "$BASH_CONFIG_LOADED" ]; then
 	load-source "$BASH_BASE/setup.sh"
 	load-source "$BASH_BASE/aliases.sh"
 	load-source "$BASH_BASE/env.sh"
-	load-source "$BASH_BASE/func.sh"
-	load-source "$BASH_BASE/cd-search.sh"
-	load-source "$HOME/.cargo/env" skip
+    load-source "$BASH_BASE/func.sh"
+    load-source "$BASH_BASE/cd-search.sh"
+    load-source "$BASH_BASE/history-local.sh"
+    load-source "$HOME/.cargo/env" skip
 	load-source "$HOME/.local/bin/appenv.bash"
 	# NOTE: Not using z anymore
 	# load-source "$HOME/.local/src/z/z.sh"
@@ -50,7 +51,7 @@ if [ -z "$BASH_CONFIG_LOADED" ]; then
 	load-source "$BASH_BASE/secrets.sh"
 	load-source "$BASH_BASE/prompt.sh"
 	load-source "$BASH_BASE/extra.sh"
-	# Session-prioritized history (up/down = current session, Ctrl-R = all sessions)
+    # Local per-shell history (each terminal has completely separate history)
 	load-source "$HOME/Workspace/Perso/nota/src/sh/libnota.sh"
 	load-source "$HOME/.sdkman/bin/sdkman-init.sh" silent
 	load-source "$HOME/.config/broot/launcher/bash/br"

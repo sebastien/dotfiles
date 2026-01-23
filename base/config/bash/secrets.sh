@@ -31,6 +31,7 @@ function load-secrets {
 		secret_def ANTHROPIC_API_KEY claude.token
 		secret_def CODESTRAL_API_KEY codestral.token
 		secret_def MISTRAL_API_KEY mistral.token
+		secret_def CONTEXT7_API_KEY context7.token
 		if [ ! -z "${HAS_SECRET}" ]; then
 			echo "Secrets: ${HAS_SECRET[@]}"
 		fi

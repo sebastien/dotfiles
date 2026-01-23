@@ -4,8 +4,6 @@ set -o vi
 shopt -s extglob
 shopt -s checkwinsize
 
-# NOTE: History settings are in sync-history.sh
-
 export PYENV_ROOT="$HOME/.pyenv"
 if [ -e "$PYENV_ROOT" ]; then
 	command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
@@ -20,9 +18,9 @@ if [ -z "$BASH_CONFIG_LOADED" ]; then
 	export GREP_OPTIONS="--color=auto"     # make grep colorful
 	export LSCOLORS=gxfxbEaEBxxEhEhBaDaCaD # make ls more colorful as well
 	# NOTE: History settings are in sync-history.sh
-	export LANG="en_US.UTF-8"                             # Language formatting is still important
-	export LC_ALL="en_US.UTF-8"                           # byte-wise sorting and force language for those pesky apps
-	export MANPAGER="less -X"                             # Less is more
+	export LANG="en_US.UTF-8"   # Language formatting is still important
+	export LC_ALL="en_US.UTF-8" # byte-wise sorting and force language for those pesky apps
+	export MANPAGER="less -X"   # Less is more
 	export CDPATH=.:$HOME/Workspace:$HOME
 	export LOCALE_ARCHIVE=/usr/lib/locale/locale-archive¬
 
@@ -49,12 +47,10 @@ if [ -z "$BASH_CONFIG_LOADED" ]; then
 	# load-source "$HOME/Workspace/Community/appenv/bin/appenv.bash" silent
 	load-source "$HOME/.nix-profile/etc/profile.d/nix.sh" silent
 	# We need to that later on
-	# load-source "$BASH_BASE/preexec.sh"
 	load-source "$BASH_BASE/secrets.sh"
 	load-source "$BASH_BASE/prompt.sh"
 	load-source "$BASH_BASE/extra.sh"
 	# Session-prioritized history (up/down = current session, Ctrl-R = all sessions)
-	load-source "$BASH_BASE/sync-history.sh"
 	load-source "$HOME/Workspace/Perso/nota/src/sh/libnota.sh"
 	load-source "$HOME/.sdkman/bin/sdkman-init.sh" silent
 	load-source "$HOME/.config/broot/launcher/bash/br"

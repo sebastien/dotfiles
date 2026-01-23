@@ -1,0 +1,126 @@
+#!/bin/bash
+
+# do-cleanlinks - Find and remove broken symlinks
+# Usage: do-cleanlinks [OPTIONS] [PATH...]
+# 
+# Options:
+#   -d, --dry-run    Show what would be done without actually removing anything
+#   -h, --help       Show this help message
+#
+# If no PATH is provided, defaults to current directory.
+# Does not traverse into symlinked directories.
+
+set -uo pipefail
+
+# Parse command line arguments
+DRY_RUN=false
+PATHS=()
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -d|--dry-run)
+            DRY_RUN=true
+            shift
+            ;;
+        -h|--help)
+            echo "Usage: $0 [OPTIONS] [PATH...]"
+            echo ""
+            echo "Find and remove broken symlinks."
+            echo ""
+            echo "Options:"
+            echo "  -d, --dry-run    Show what would be done without actually removing anything"
+            echo "  -h, --help       Show this help message"
+            echo ""
+            echo "If no PATH is provided, defaults to current directory."
+            echo "Does not traverse into symlinked directories."
+            exit 0
+            ;;
+        -*)
+            echo "Error: Unknown option $1" >&2
+            echo "Use --help for usage information" >&2
+            exit 1
+            ;;
+        *)
+            PATHS+=("$1")
+            shift
+            ;;
+    esac
+done
+
+# If no paths provided, use current directory
+if [[ ${#PATHS[@]} -eq 0 ]]; then
+    PATHS+=(".")
+fi
+
+# Function to check if a path exists
+path_exists() {
+    local path="$1"
+    if [[ ! -e "$path" ]]; then
+        echo "Error: Path '$path' does not exist" >&2
+        return 1
+    fi
+    return 0
+}
+
+# Function to find and process broken symlinks
+process_path() {
+    local path="$1"
+    local dry_run="$2"
+    
+    echo "Processing: $path"
+    
+    # Find broken symlinks using find with -xtype l
+    # -xtype l: Only match broken symlinks (doesn't traverse into symlinked directories by default)
+    local broken_links=()
+    while IFS= read -r -d '' link; do
+        broken_links+=("$link")
+    done < <(find "$path" -xtype l -print0 2>/dev/null)
+    
+    if [[ ${#broken_links[@]} -eq 0 ]]; then
+        echo "  No broken symlinks found"
+        return 0
+    fi
+    
+    echo "  Found ${#broken_links[@]} broken symlink(s):"
+    for link in "${broken_links[@]}"; do
+        echo "    $link"
+    done
+    
+    if [[ "$dry_run" == "true" ]]; then
+        echo "  (Dry-run: Would remove the above symlinks)"
+        return 0
+    fi
+    
+    # Confirm removal
+    read -p "  Remove these ${#broken_links[@]} broken symlink(s)? [y/N] " -r
+    echo ""
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "  Skipped removal"
+        return 0
+    fi
+    
+    # Remove broken symlinks
+    local removed_count=0
+    for link in "${broken_links[@]}"; do
+        if rm "$link"; then
+            echo "  Removed: $link"
+            ((removed_count++))
+        else
+            echo "  Failed to remove: $link" >&2
+        fi
+    done
+    
+    echo "  Removed $removed_count broken symlink(s)"
+}
+
+# Main processing loop
+for path in "${PATHS[@]}"; do
+    if path_exists "$path"; then
+        process_path "$path" "$DRY_RUN"
+    else
+        exit 1
+    fi
+    echo ""
+done
+
+echo "Done"

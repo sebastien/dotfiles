@@ -37,4 +37,7 @@ font-family-bold = "IosevkaTerm NFM Medium"
 # Shaders: git clone --depth 1 https://github.com/hackr-sh/ghostty-shaders
 custom-shader = ~/.config/ghostty/shaders/cursor_blaze.glsl
 
+# Finer mouse control
+mouse-scroll-multiplier = 0.5
+
 # EOF

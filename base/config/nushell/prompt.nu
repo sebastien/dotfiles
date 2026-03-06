@@ -1,11 +1,7 @@
 # Nushell Prompt
-# Ported from bash prompt.sh - Git/JJ-aware with host icons
+# Keeps prompt rendering cheap by avoiding repeated external probes.
 
-# --
-# Host icon based on hostname
-# --
-def get-host-icon [] {
-    let hostname = (sys host | get hostname)
+def get-host-icon [hostname: string] {
     if ($hostname =~ "bench") {
         "🧰 "
     } else if ($hostname =~ "(?i)(renade|osmos)") {
@@ -23,212 +19,266 @@ def get-host-icon [] {
     }
 }
 
-# --
-# Jujutsu (jj) information helpers
-# --
+if not ("NU_PROMPT_HOSTNAME" in $env) {
+    $env.NU_PROMPT_HOSTNAME = (sys host | get hostname)
+}
+
+if not ("NU_PROMPT_HOST_ICON" in $env) {
+    $env.NU_PROMPT_HOST_ICON = (get-host-icon $env.NU_PROMPT_HOSTNAME)
+}
+
+if not ("NU_PROMPT_SHELL_ICON" in $env) {
+    $env.NU_PROMPT_SHELL_ICON = "🌊 "
+}
+
+if not ("NU_PROMPT_SCM_CACHE_TTL_MS" in $env) {
+    $env.NU_PROMPT_SCM_CACHE_TTL_MS = 1500
+}
+
 def jj-info [] {
-    # Check if we're in a jj repo
-    let jj_check = (do { jj root } | complete)
-    if $jj_check.exit_code != 0 {
+    let root = (do { jj root } | complete)
+    if $root.exit_code != 0 {
         return null
     }
-    
-    # Get change ID (shortest unique prefix)
-    let change_id = (do { jj log --no-pager -r @ --no-graph -T 'change_id.shortest()' } | complete).stdout | str trim
-    
-    # Get bookmarks
-    let bookmarks = (do { jj log --no-pager -r @ --no-graph -T 'bookmarks.join(",")' } | complete).stdout | str trim
-    
-    # Check for conflicts
-    let has_conflict = (do { jj log --no-pager -r @ --no-graph -T 'if(conflict, "!")' } | complete).stdout | str trim
-    
-    # Check if empty
-    let is_empty = (do { jj log --no-pager -r @ --no-graph -T 'if(empty, "○", "●")' } | complete).stdout | str trim
-    
-    # Get modified files count from diff --stat
-    let diff_stat = (do { jj diff --stat --no-pager } | complete).stdout
-    let modified_count = if ($diff_stat | str trim | is-empty) {
+
+    let jj_root = ($root.stdout | str trim)
+    if (($jj_root | is-empty) or not (($jj_root | path join ".jj") | path exists)) {
+        return null
+    }
+
+    let template = 'change_id.shortest() ++ "|" ++ bookmarks.join(",") ++ "|" ++ description.first_line() ++ "|" ++ if(conflict, "!", "") ++ "|" ++ if(empty, "○", "●")'
+    let info = (do {
+        jj log --no-pager -r @ --no-graph -T $template
+    } | complete)
+
+    if $info.exit_code != 0 {
+        return null
+    }
+
+    let fields = ($info.stdout | str trim | split row "|")
+    if (($fields | length) < 5) {
+        return null
+    }
+
+    let diff_stat = (do { jj diff --stat --no-pager } | complete)
+    let modified_count = if $diff_stat.exit_code != 0 {
         0
     } else {
-        # Parse "X files changed" from last line
-        let last_line = ($diff_stat | lines | last)
-        let match = ($last_line | parse "{count} file" | get count?.0?)
-        if ($match | is-empty) { 0 } else { $match | into int }
+        let line_count = ($diff_stat.stdout | lines | length)
+        if $line_count > 1 { $line_count - 1 } else { 0 }
     }
-    
+
+    let current_bookmark = (
+        ($fields | get 1)
+        | split row ","
+        | where {|bookmark| $bookmark | is-not-empty }
+        | each {|bookmark| $bookmark | str replace -r '\*$' '' }
+        | append ""
+        | first
+    )
+    let ancestor_bookmark = if ($current_bookmark | is-empty) {
+        let ancestor = (do {
+            jj log --no-pager -r 'heads(::@ & bookmarks())' --no-graph -T 'bookmarks.join(",")'
+        } | complete)
+
+        if $ancestor.exit_code == 0 {
+            (
+                $ancestor.stdout
+                | str trim
+                | split row ","
+                | where {|bookmark| $bookmark | is-not-empty }
+                | each {|bookmark| $bookmark | str replace -r '\*$' '' }
+                | append ""
+                | first
+            )
+        } else {
+            ""
+        }
+    } else {
+        ""
+    }
+
     {
-        change_id: $change_id
-        bookmarks: $bookmarks
-        has_conflict: ($has_conflict == "!")
-        is_empty: ($is_empty == "○")
-        empty_indicator: $is_empty
+        change_id: ($fields | get 0)
+        bookmark: (if ($current_bookmark | is-not-empty) { $current_bookmark } else { $ancestor_bookmark })
+        has_description: ((($fields | get 2) | str trim | is-not-empty))
+        has_conflict: (($fields | get 3) == "!")
+        empty_indicator: ($fields | get 4)
         modified: $modified_count
     }
 }
 
-# --
-# Git information helpers
-# --
-def git-branch-info [] {
-    # Check if we're in a git repo
-    let git_check = (do { git rev-parse --is-inside-work-tree } | complete)
-    if $git_check.exit_code != 0 {
+def git-info [] {
+    let jj_root = (do { jj root } | complete)
+    if $jj_root.exit_code == 0 {
+        let root = ($jj_root.stdout | str trim)
+        if (($root | is-not-empty) and (($root | path join ".jj") | path exists)) {
+            return null
+        }
+    }
+
+    let status = (do {
+        git status --porcelain=v2 --branch
+    } | complete)
+
+    if $status.exit_code != 0 {
         return null
     }
-    
-    # Get current branch
-    let branch = (do { git branch --show-current } | complete)
-    let current_branch = if $branch.exit_code == 0 {
-        $branch.stdout | str trim
-    } else {
-        # Detached HEAD - get short SHA
-        (do { git rev-parse --short HEAD } | complete).stdout | str trim
-    }
-    
-    # Get branch count
-    let branch_count = (do { git branch --no-color -l } | complete).stdout | lines | length
-    
-    # Get staged count
-    let staged_count = (do { git diff --cached --numstat } | complete).stdout | lines | length
-    
-    # Get unstaged count
-    let unstaged_count = (do { git diff --numstat } | complete).stdout | lines | length
-    
-    # Get revision count (can fail on new repos)
-    let rev_result = (do { git rev-list --count HEAD } | complete)
-    let rev_count = if $rev_result.exit_code == 0 {
-        $rev_result.stdout | str trim
-    } else {
-        "0"
-    }
-    
+
+    let lines = ($status.stdout | lines)
+    let branch_line = ($lines | where {|line| $line | str starts-with "# branch.head " } | first)
+    let branch_name = (
+        $branch_line
+        | str replace "# branch.head " ""
+        | str replace "(detached)" "HEAD"
+        | str trim
+    )
+
+    let entries = ($lines | where {|line| not ($line | str starts-with "#") })
+    let staged = (
+        $entries
+        | where {|line|
+            let x = ($line | str substring 2..3)
+            $x != "."
+        }
+        | length
+    )
+    let unstaged = (
+        $entries
+        | where {|line|
+            let y = ($line | str substring 3..4)
+            $y != "."
+        }
+        | length
+    )
+
     {
-        branch: $current_branch
-        branch_count: $branch_count
-        staged: $staged_count
-        unstaged: $unstaged_count
-        rev_count: $rev_count
+        branch: $branch_name
+        staged: $staged
+        unstaged: $unstaged
     }
 }
 
-# Detect SCM type (prefer jj over git)
-def scm-type [] {
-    let jj_check = (do { jj root } | complete)
-    if $jj_check.exit_code == 0 {
-        return "⌘"
+def build-scm-prompt [
+    reset: string
+    purple_dk: string
+    purple: string
+    purple_lt: string
+    red: string
+    bold: string
+] {
+    let jj = (jj-info)
+    if ($jj != null) {
+        let jj_ref = if ($jj.bookmark | is-empty) {
+            $jj.change_id
+        } else {
+            $"($jj.change_id):($jj.bookmark)"
+        }
+        let missing_description = if $jj.has_description { "" } else { "?" }
+        let modified_marker = if $jj.modified > 0 { "+" } else { "" }
+        let conflict_display = if $jj.has_conflict { $" ($red)!" } else { "" }
+        return $"($reset)($purple_dk)[jj ($purple)($bold)($jj_ref)($missing_description)($modified_marker)($purple_dk)]($reset)($conflict_display)"
     }
-    
-    let git_check = (do { git branch } | complete)
-    if $git_check.exit_code == 0 {
-        return "±"
+
+    let git = (git-info)
+    if ($git != null) {
+        let modified_marker = if (($git.staged + $git.unstaged) > 0) { "+" } else { "" }
+        return $"($reset)($purple_dk)[git ($purple)($bold)($git.branch)($modified_marker)($purple_dk)]($reset)"
     }
-    
-    let hg_check = (do { hg root } | complete)
-    if $hg_check.exit_code == 0 {
-        return "☿"
-    }
-    
-    "○"
+
+    ""
 }
 
-# --
-# Left prompt
-# --
+def get-scm-prompt [
+    reset: string
+    purple_dk: string
+    purple: string
+    purple_lt: string
+    red: string
+    bold: string
+] {
+    let now_ms = (date now | format date "%s%3f" | into int)
+    let cached_pwd = ($env | get -i NU_PROMPT_SCM_CACHE_PWD)
+    let cached_at = ($env | get -i NU_PROMPT_SCM_CACHE_AT)
+    let cached_value = ($env | get -i NU_PROMPT_SCM_CACHE_VALUE)
+
+    if (
+        ($cached_pwd | is-not-empty)
+        and ($cached_at | is-not-empty)
+        and ($cached_value | is-not-empty)
+        and ($cached_pwd == $env.PWD)
+        and (($now_ms - $cached_at) < $env.NU_PROMPT_SCM_CACHE_TTL_MS)
+    ) {
+        return $cached_value
+    }
+
+    let scm_prompt = (build-scm-prompt $reset $purple_dk $purple $purple_lt $red $bold)
+    $env.NU_PROMPT_SCM_CACHE_PWD = $env.PWD
+    $env.NU_PROMPT_SCM_CACHE_AT = $now_ms
+    $env.NU_PROMPT_SCM_CACHE_VALUE = $scm_prompt
+    $scm_prompt
+}
+
 def create_left_prompt [] {
-    let host_icon = (get-host-icon)
-    
-    # Get path as parent/current
     let current_dir = ($env.PWD | path basename)
     let parent_dir = ($env.PWD | path dirname | path basename)
-    
-    # Status color based on last exit code (use 256 color codes)
+
     let status_color = if ($env.LAST_EXIT_CODE == 0) {
-        (ansi -e { fg: "#0087ff" })  # Blue (color 33)
+        (ansi -e { fg: "#0087ff" })
     } else {
-        (ansi -e { fg: "#af0000" })  # Red (color 124)
+        (ansi -e { fg: "#af0000" })
     }
     let reset = (ansi reset)
     let bold = (ansi -e { attr: b })
     let reverse = (ansi -e { attr: r })
-    
-    # Build prompt: hosticon ─░▒▓ path ▓▒░ ▷
-    $"($host_icon)($status_color)─($reset)($status_color)░▒▓($reverse) ($parent_dir)/($bold)($current_dir) ($reset)($status_color)▓▒░ ▷($reset) "
+
+    $"($env.NU_PROMPT_HOST_ICON)($status_color)─($reset)($status_color)░▒▓($reverse) ($parent_dir)/($bold)($current_dir) ($reset)($status_color)▓▒░ ▷($reset) "
 }
 
-# --
-# Right prompt
-# --
 def create_right_prompt [] {
     let reset = (ansi reset)
-    let purple_dk = (ansi -e { fg: "#5f00af" })   # color 55
-    let purple = (ansi -e { fg: "#8700af" })       # color 92
-    let purple_lt = (ansi -e { fg: "#d75faf" })    # color 163
-    let gold = (ansi -e { fg: "#ffaf00" })         # color 214
-    let gold_dk = (ansi -e { fg: "#ff8700" })      # color 208
-    let red = (ansi -e { fg: "#af0000" })          # color 124
+    let purple_dk = (ansi -e { fg: "#5f00af" })
+    let purple = (ansi -e { fg: "#8700af" })
+    let purple_lt = (ansi -e { fg: "#d75faf" })
+    let gold = (ansi -e { fg: "#ffaf00" })
+    let gold_dk = (ansi -e { fg: "#ff8700" })
+    let red = (ansi -e { fg: "#af0000" })
     let bold = (ansi -e { attr: b })
-    
+
     mut parts = []
-    
-    # Appenv status (if APPENV_STATUS is set or .appenv exists)
+
     let has_appenv_file = (".appenv" | path exists)
     if ("APPENV_STATUS" in $env) or $has_appenv_file {
         let appenv_icon = if $has_appenv_file { "▶" } else { "▷" }
         let appenv_status = if ("APPENV_STATUS" in $env) { $env.APPENV_STATUS } else { "" }
         $parts = ($parts | append $" ($gold_dk)($appenv_icon)($gold)($appenv_status)($gold_dk) ")
     }
-    
-    # SCM information (prefer jj over git)
-    let jj_info = (jj-info)
-    if ($jj_info != null) {
-        # Jujutsu repository
-        let scm = (scm-type)
-        let bookmark_display = if ($jj_info.bookmarks | is-empty) { "" } else { $" ($purple_lt)($jj_info.bookmarks)" }
-        let conflict_display = if $jj_info.has_conflict { $" ($red)!" } else { "" }
-        let jj_summary = $"($reset)($purple_dk)⟜($purple)($bold)($jj_info.change_id)($bookmark_display)($reset)($purple_dk) ($scm)($jj_info.empty_indicator)($purple_lt)($bold)+($jj_info.modified)($conflict_display)($reset)"
-        $parts = ($parts | append $jj_summary)
-    } else {
-        # Try Git
-        let git_info = (git-branch-info)
-        if ($git_info != null) {
-            let scm = (scm-type)
-            let git_summary = $"($reset)($purple_dk)⟜($purple)($bold)($git_info.branch)($reset)($purple_dk)⋲ ($purple)($git_info.branch_count) ($scm)R($purple_lt)($git_info.rev_count)($bold)+($git_info.unstaged)($reset)($purple)+($git_info.staged)($purple_dk)($reset)"
-            $parts = ($parts | append $git_summary)
-        }
+
+    let scm_prompt = (get-scm-prompt $reset $purple_dk $purple $purple_lt $red $bold)
+    if ($scm_prompt | is-not-empty) {
+        $parts = ($parts | append $scm_prompt)
     }
-    
-    # Process count and time
-    let process_count = (ps | length)
+
     let current_time = (date now | format date "%H:%M:%S")
-    
-    # SSH indicator
     let session_type = if ("SSH_CLIENT" in $env) or ("SSH_TTY" in $env) {
-        let hostname = (sys host | get hostname)
-        $"┈⦗ssh@($hostname)⦘"
+        $"($purple)┈⦗ssh@($env.NU_PROMPT_HOSTNAME)⦘"
     } else {
         ""
     }
-    
-    $parts = ($parts | append $"($purple_dk)⛬ ($process_count) ○($current_time)($purple)($session_type)($reset)")
-    
+    let tmux_type = if ("TMUX" in $env) {
+        $"($purple) ◫"
+    } else {
+        ""
+    }
+
+    $parts = ($parts | append $"($purple_dk)○($current_time)($purple)($session_type)($tmux_type)($env.NU_PROMPT_SHELL_ICON)($reset)")
     $parts | str join ""
 }
 
-# --
-# Export prompt configuration
-# --
 $env.PROMPT_COMMAND = {|| create_left_prompt }
 $env.PROMPT_COMMAND_RIGHT = {|| create_right_prompt }
 
-# Prompt indicators (matching bash style)
-$env.PROMPT_INDICATOR = {|| "" }  # Already included in left prompt
+$env.PROMPT_INDICATOR = {|| "" }
 $env.PROMPT_INDICATOR_VI_NORMAL = {|| "" }
 $env.PROMPT_INDICATOR_VI_INSERT = {|| "" }
-$env.PROMPT_MULTILINE_INDICATOR = {|| " … " }
-
-# Transient prompt (optional - makes history cleaner)
-# Uncomment to use simpler prompt for history
-# $env.TRANSIENT_PROMPT_COMMAND = {|| "▷ " }
-# $env.TRANSIENT_PROMPT_COMMAND_RIGHT = {|| "" }
-
-# EOF
+$env.PROMPT_MULTILINE_INDICATOR = {|| " ... " }

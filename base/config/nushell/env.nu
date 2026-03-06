@@ -41,8 +41,24 @@ if ($data_path | path exists) {
     $env.DATA_PATH = $data_path
 }
 
-# CDPATH equivalent for nushell (used by some tools)
-$env.CDPATH = $".:($env.HOME)/Workspace:($env.HOME)"
+# CDPATH equivalent for nushell.
+# Include ~/Workspace and its first-level directories so `cd` can resolve them quickly.
+let workspace_root = ($env.HOME | path join "Workspace")
+let workspace_cdpaths = if ($workspace_root | path exists) {
+    let workspace_children = (
+        ls $workspace_root
+        | where type == dir
+        | get name
+    )
+    [$workspace_root] ++ $workspace_children
+} else {
+    []
+}
+$env.CDPATH = (
+    ["."] ++ $workspace_cdpaths ++ [$env.HOME]
+    | uniq
+    | str join ":"
+)
 
 # Locale archive (Linux)
 $env.LOCALE_ARCHIVE = "/usr/lib/locale/locale-archive"

@@ -8,10 +8,10 @@
 $env.config = {
     # Vi editing mode (like bash set -o vi)
     edit_mode: vi
-    
+
     # Show banner on startup
     show_banner: false
-    
+
     # History configuration (matching bash HISTSIZE, HISTCONTROL)
     history: {
         max_size: 32768                # HISTSIZE=32768
@@ -19,7 +19,7 @@ $env.config = {
         file_format: "sqlite"          # Use sqlite for better performance
         isolation: false               # Share across sessions
     }
-    
+
     # Completions
     completions: {
         case_sensitive: false
@@ -31,13 +31,13 @@ $env.config = {
             max_results: 100
         }
     }
-    
+
     # File size format
     filesize: {
         metric: true
         format: "auto"
     }
-    
+
     # Table display
     table: {
         mode: rounded
@@ -50,25 +50,24 @@ $env.config = {
         }
         header_on_separator: false
     }
-    
+
     # Error display
     error_style: "fancy"
-    
+
     # Hooks
     hooks: {
-        # Pre-prompt hook - store directory for cd-search
-        pre_prompt: [{ ||
-            # Store directory visit for cd-search/z command
-            # Uses external cd-store script
-            ^cd-store $env.PWD
-        }]
-        
-        # Environment change hook
+        # Store directory visits only when the directory actually changes.
         env_change: {
-            PWD: []
+            PWD: [{|before, after|
+                if ($after | is-not-empty) and ($after != $before) {
+                    do --ignore-errors {
+                        ^cd-store store $after
+                    }
+                }
+            }]
         }
     }
-    
+
     # Menus
     menus: [
         {
@@ -102,7 +101,7 @@ $env.config = {
             }
         }
     ]
-    
+
     # Keybindings
     keybindings: [
         {
@@ -113,8 +112,26 @@ $env.config = {
             event: {
                 until: [
                     { send: menu name: completion_menu }
-                    { send: menunext }
                     { edit: complete }
+                ]
+            }
+        }
+        {
+            name: completion_previous
+            modifier: shift
+            keycode: backtab
+            mode: [emacs, vi_normal, vi_insert]
+            event: { send: menuprevious }
+        }
+        {
+            name: completion_enter
+            modifier: none
+            keycode: enter
+            mode: [emacs, vi_normal, vi_insert]
+            event: {
+                until: [
+                    { edit: complete }
+                    { send: enter }
                 ]
             }
         }
@@ -141,14 +158,14 @@ $env.config = {
             event: { send: clearscreen }
         }
     ]
-    
+
     # Cursor shapes for vi mode
     cursor_shape: {
         emacs: line
-        vi_insert: line
+        vi_insert: block
         vi_normal: block
     }
-    
+
     # Color config
     color_config: {
         separator: white

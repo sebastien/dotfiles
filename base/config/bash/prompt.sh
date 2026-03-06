@@ -35,6 +35,8 @@ AL-*)
 	;;
 esac
 
+SHELLICON="🐚 "
+
 function strip-ansi() {
 	# shopt -s extglob # function uses extended globbing
 	printf %s "${1//$'\e'\[*([0-9;])m/}"
@@ -125,36 +127,49 @@ function prompt-right {
 	else
 		session_type=""
 	fi
+	if [ -n "$TMUX" ]; then
+		tmux_type=" ◫"
+	else
+		tmux_type=""
+	fi
 	# We get SCM information (prefer jj over git)
 	scm_summary=""
-	if jj root >/dev/null 2>/dev/null; then
-		# Jujutsu repository
-		jj_change=$(jj log --no-pager -r @ --no-graph -T 'change_id.shortest()' 2>/dev/null)
-		jj_bookmarks=$(jj log --no-pager -r @ --no-graph -T 'bookmarks.join(",")' 2>/dev/null)
-		jj_conflict=$(jj log --no-pager -r @ --no-graph -T 'if(conflict, "!")' 2>/dev/null)
-		jj_empty=$(jj log --no-pager -r @ --no-graph -T 'if(empty, "○", "●")' 2>/dev/null)
-		# Count modified files from jj status
-		jj_modified_count=$(jj diff --stat --no-pager 2>/dev/null | tail -1 | grep -oE '[0-9]+ file' | grep -oE '[0-9]+' || echo "0")
-		# Format: ⟜change_id bookmarks ●/○ +modified !conflict
-		jj_bookmark_display=""
-		if [ -n "$jj_bookmarks" ]; then
-			jj_bookmark_display=" \[$PURPLE_LT\]${jj_bookmarks}"
+	jj_root=$(jj root 2>/dev/null)
+	if [ -n "$jj_root" ] && [ -d "$jj_root/.jj" ]; then
+		jj_info=$(jj log --no-pager -r @ --no-graph -T 'change_id.shortest() ++ "|" ++ bookmarks.join(",") ++ "|" ++ description.first_line() ++ "|" ++ if(conflict, "!", "")' 2>/dev/null)
+		IFS='|' read -r jj_change jj_bookmarks jj_description jj_conflict <<<"$jj_info"
+		jj_bookmark=$(printf '%s' "$jj_bookmarks" | cut -d',' -f1 | sed 's/\*$//')
+		if [ -z "$jj_bookmark" ]; then
+			jj_bookmark=$(jj log --no-pager -r 'heads(::@ & bookmarks())' --no-graph -T 'bookmarks.join(",")' 2>/dev/null | cut -d',' -f1 | sed 's/\*$//')
+		fi
+		jj_ref="$jj_change"
+		if [ -n "$jj_bookmark" ]; then
+			jj_ref="${jj_change}:${jj_bookmark}"
+		fi
+		jj_description_marker=""
+		if [ -z "$jj_description" ]; then
+			jj_description_marker="?"
+		fi
+		jj_modified_marker=""
+		if [ -n "$(jj diff --stat --no-pager 2>/dev/null | tail -n +2)" ]; then
+			jj_modified_marker="+"
 		fi
 		jj_conflict_display=""
 		if [ -n "$jj_conflict" ]; then
 			jj_conflict_display=" \[$RED\]${jj_conflict}"
 		fi
-		scm_summary="\[$RESET\]\[$PURPLE_DK\]⟜\[$PURPLE\]\[$BOLD\]${jj_change}${jj_bookmark_display}\[$RESET\]\[$PURPLE_DK\] $(scm-type)${jj_empty}\[$PURPLE_LT\]\[$BOLD\]+${jj_modified_count}${jj_conflict_display}\[$RESET\]"
+		scm_summary="\[$RESET\]\[$PURPLE_DK\][jj \[$PURPLE\]\[$BOLD\]${jj_ref}${jj_description_marker}${jj_modified_marker}\[$PURPLE_DK\]]\[$RESET\]${jj_conflict_display}"
 	else
-		# Git repository
-		git_branch=$(git branch --no-color -l 2>/dev/null)
-		if [ -n "$git_branch" ]; then
-			git_branch_count=$(echo "$git_branch" | wc -l)
-			git_branch_current=$(echo "$git_branch" | grep '*' | cut -d' ' -f2)
-			git_staged_count=$(git diff --cached --numstat | wc -l)
-			git_unstaged_count=$(git diff --numstat | wc -l)
-			git_rev_number=$(git rev-list --count HEAD)
-			scm_summary="\[$RESET\]\[$PURPLE_DK\]⟜\[$PURPLE\]\[$BOLD\]${git_branch_current}\[$RESET\]\[$PURPLE_DK\]⋲ \[$PURPLE\]${git_branch_count} $(scm-type)R\[$PURPLE_LT\]${git_rev_number}\[$BOLD\]+${git_unstaged_count}\[$RESET\]\[$PURPLE\]+${git_staged_count}\[$PURPLE_DK\]\[$RESET\]"
+		git_branch_current=$(git branch --show-current 2>/dev/null)
+		if [ -z "$git_branch_current" ]; then
+			git_branch_current=$(git rev-parse --short HEAD 2>/dev/null)
+		fi
+		if [ -n "$git_branch_current" ]; then
+			git_dirty=""
+			if [ -n "$(git status --porcelain 2>/dev/null)" ]; then
+				git_dirty="+"
+			fi
+			scm_summary="\[$RESET\]\[$PURPLE_DK\][git \[$PURPLE\]\[$BOLD\]${git_branch_current}${git_dirty}\[$PURPLE_DK\]]\[$RESET\]"
 		fi
 	fi
 	if [ -n "$APPENV_STATUS" ] || [ -e ".appenv" ]; then
@@ -175,7 +190,7 @@ function prompt-right {
 	if [ ! -z "$HAS_MPSTAT" ]; then
 		stat_cpu_usage=$(mpstat | awk '$12 ~ /[0-9.]+/ { print 100 - $12"%" }')
 	fi
-	echo "${appenv_status}${scm_summary}\[$PURPLE_DK\]⛬ ${process_count} ○$(date '+%T')\[$PURPLE\]${session_type}\[$RESET\]"
+	echo "${appenv_status}${scm_summary}\[$PURPLE_DK\]⛬ ${process_count} ○$(date '+%T')\[$PURPLE\]${session_type}${tmux_type}${SHELLICON}\[$RESET\]"
 }
 
 if [ -z "$SHELL_TYPE" ] || [[ "$SHELL_TYPE" == "bash" ]]; then

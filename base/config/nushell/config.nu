@@ -73,7 +73,7 @@ $env.config = {
         {
             name: completion_menu
             only_buffer_difference: false
-            marker: "| "
+            marker: "▤ "
             type: {
                 layout: columnar
                 columns: 4
@@ -112,13 +112,20 @@ $env.config = {
             event: {
                 until: [
                     { send: menu name: completion_menu }
-                    { edit: complete }
+                    { send: menunext }
                 ]
             }
         }
         {
             name: completion_previous
             modifier: shift
+            keycode: tab
+            mode: [emacs, vi_normal, vi_insert]
+            event: { send: menuprevious }
+        }
+        {
+            name: completion_previous_backtab
+            modifier: none
             keycode: backtab
             mode: [emacs, vi_normal, vi_insert]
             event: { send: menuprevious }

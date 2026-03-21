@@ -67,8 +67,8 @@ keybinds {
         // Terminate entire session (mirrors tmux kill-session)
         bind "z" { Quit; }
 
-        // Kill session and close (like zkill)
-        bind "Z" { Run "zellij" "kill-session"; }
+        // Kill session and close (like zkill) - kills entire session even with multiple clients
+        bind "Z" { Run "bash" "-c" "zellij kill-session $ZELLIJ_SESSION_NAME"; }
 
         // Fullscreen
         bind "f" { ToggleFocusFullscreen; SwitchToMode "Normal"; }
@@ -78,6 +78,14 @@ keybinds {
 
         // Sync panes (zellij doesn't have exact sync, but we can toggle fullscreen as approximation)
         bind "y" { TogglePaneFrames; SwitchToMode "Normal"; }
+
+        // File browser popup (strider plugin)
+        bind "o" {
+            LaunchOrFocusPlugin "zellij:strider" {
+                floating true
+            }
+            SwitchToMode "Normal"
+        }
 
         // Exit tmux mode with esc or enter
         bind "Esc" { SwitchToMode "Normal"; }
@@ -153,7 +161,7 @@ serialize_pane_viewport true
 // Choose the mode that zellij uses when starting up.
 // Default: normal
 //
-default_mode "locked"
+default_mode "normal"
 
 // Toggle enabling the mouse mode.
 // On certain configurations, or terminals this could

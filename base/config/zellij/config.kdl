@@ -64,8 +64,8 @@ keybinds {
         // Close pane
         bind "x" { CloseFocus; SwitchToMode "Normal"; }
 
-        // Terminate entire session (mirrors tmux kill-session)
-        bind "z" { Quit; }
+        // Quit client (detach from session, keeps session running in background)
+        bind "z" { Detach; SwitchToMode "Normal"; }
 
         // Kill session and close (like zkill) - kills entire session even with multiple clients
         bind "Z" { Run "bash" "-c" "zellij kill-session $ZELLIJ_SESSION_NAME"; }
@@ -74,7 +74,10 @@ keybinds {
         bind "f" { ToggleFocusFullscreen; SwitchToMode "Normal"; }
 
         // Rename tab
-        bind "," { SwitchToMode "RenameTab"; }
+        bind "R" { SwitchToMode "RenameTab"; }
+
+        // Toggle pane frames
+        bind "," { TogglePaneFrames; SwitchToMode "Normal"; }
 
         // Sync panes (zellij doesn't have exact sync, but we can toggle fullscreen as approximation)
         bind "y" { TogglePaneFrames; SwitchToMode "Normal"; }
@@ -109,6 +112,15 @@ plugins {
     strider { path "strider"; }
     compact-bar { path "compact-bar"; }
     session-manager { path "session-manager"; }
+    share_clipboard { path "share-clipboard"; }
+    zjstatus-hints location="https://github.com/b0o/zjstatus-hints/releases/latest/download/zjstatus-hints.wasm" {
+        pipe_name "zjstatus_hints"
+        hide_in_base_mode true
+    }
+}
+
+load_plugins {
+    zjstatus-hints
 }
 
 on_force_close "detach"
@@ -257,12 +269,18 @@ layout {
         plugin location="https://github.com/dj95/zjstatus/releases/latest/download/zjstatus.wasm" {
             format_left   "{mode} #[fg=#89b4fa,bold]{session}"
             format_center "{tabs}"
-            format_right  "{datetime}"
+            format_right  "{pipe_zjstatus_hints} {datetime}"
             format_space  ""
 
             hide_frame_for_single_pane "true"
             hide_frame_except_for_search "true"
             hide_frame_except_for_fullscreen "true"
+
+            mode_normal "#[bg=#89b4fa] {name} "
+            mode_tmux "#[bg=#ffc387] {name} "
+
+            // zjstatus-hints integration - shows keybinding hints for current mode
+            pipe_zjstatus_hints_format "#[fg=#a9b1d6] {output}"
         }
     }
     pane

@@ -12,29 +12,75 @@ fi
 function tat {
 	local session="$1"
 	local sid=""
-	if [ -z "$session" ]; then
-		case $TERM_MULTIPLEXER in
-		tmux)
-			session=$(tmux list-session | tail -n1 | cut -d: -f1)
-			sid="$session"
-			;;
-		zellij)
-			session=$(NO_COLOR=1 zellij list-sessions | sed 's/\x1B\[[0-9;]*m//g' | tail -n1 | cut -d' ' -f1)
-			sid="$session"
-			;;
-		esac
-	else
-		case $TERM_MULTIPLEXER in
-		tmux)
-			sid=$(tmux list-session | grep "$session" | tail -n1 | cut -d: -f1)
-			;;
-		zellij)
-			sid=$(zellij list-sessions | sed 's/\x1B\[[0-9;]*m//g' | grep "$session" | tail -n1 | cut -d' ' -f1)
-			;;
-		esac
+	local sessions=""
+
+	case $TERM_MULTIPLEXER in
+	tmux)
+		sessions=$(tmux list-sessions 2>/dev/null | cut -d: -f1)
+		;;
+	zellij)
+		sessions=$(zellij list-sessions 2>/dev/null | sed 's/\x1B\[[0-9;]*m//g' | awk '{print $1}')
+		;;
+	esac
+
+	if [ -z "$sessions" ]; then
+		echo "!!! ERR No running sessions found"
+		return 1
 	fi
+
+	if [ -z "$session" ]; then
+		local session_count
+		session_count=$(echo "$sessions" | grep -c .)
+		if [ "$session_count" -eq 1 ]; then
+			sid="$sessions"
+		else
+			if command -v fzf >/dev/null 2>&1; then
+				sid=$(echo "$sessions" | fzf --prompt="Select session: ")
+				if [ -z "$sid" ]; then
+					echo "No session selected"
+					return 1
+				fi
+			else
+				sid=$(echo "$sessions" | tail -n1)
+			fi
+		fi
+	else
+		# Check for exact match first
+		sid=$(echo "$sessions" | grep "^${session}$")
+
+		# If no exact match, check for partial matches
+		if [ -z "$sid" ]; then
+			local matches
+			matches=$(echo "$sessions" | grep "$session")
+			local match_count
+			match_count=$(echo "$matches" | grep -c .)
+
+			if [ "$match_count" -eq 0 ]; then
+				echo "!!! ERR Could not find session matching '$session'"
+				return 1
+			elif [ "$match_count" -eq 1 ]; then
+				# Only one partial match, use it
+				sid="$matches"
+			else
+				# Multiple matches, use fzf to select
+				if command -v fzf >/dev/null 2>&1; then
+					sid=$(echo "$matches" | fzf --prompt="Select session: ")
+					if [ -z "$sid" ]; then
+						echo "No session selected"
+						return 1
+					fi
+				else
+					echo "!!! ERR Multiple sessions found matching '$session' but fzf is not installed:"
+					echo "$matches"
+					return 1
+				fi
+			fi
+		fi
+	fi
+
 	if [ -z "$sid" ]; then
-		echo "!!! ERR Could not find a running tmux session $session"
+		echo "!!! ERR Could not find a running session"
+		return 1
 	else
 		case $TERM_MULTIPLEXER in
 		tmux)
@@ -76,15 +122,58 @@ function znew {
 function zat {
 	local session="$1"
 	local sid=""
-	if [ -z "$session" ]; then
-		session=$(NO_COLOR=1 zellij list-sessions | sed 's/\x1B\[[0-9;]*m//g' | tail -n1 | cut -d' ' -f1)
-		sid="$session"
-	else
-		sid=$(zellij list-sessions | sed 's/\x1B\[[0-9;]*m//g' | grep "$session" | tail -n1 | cut -d' ' -f1)
+	local sessions=""
+
+	# Get list of all sessions
+	sessions=$(zellij list-sessions 2>/dev/null | sed 's/\x1B\[[0-9;]*m//g' | awk '{print $1}')
+
+	if [ -z "$sessions" ]; then
+		echo "!!! ERR No running zellij sessions found"
+		return 1
 	fi
-	if [ -z "$sid" ]; then
-		echo "!!! ERR Could not find a running zellij session $session"
+
+	if [ -z "$session" ]; then
+		# No session specified, use the most recent one
+		sid=$(echo "$sessions" | tail -n1)
 	else
+		# Check for exact match first
+		sid=$(echo "$sessions" | grep "^${session}$")
+
+		# If no exact match, check for partial matches
+		if [ -z "$sid" ]; then
+			local matches
+			matches=$(echo "$sessions" | grep "$session")
+			local match_count
+			match_count=$(echo "$matches" | grep -c .)
+
+			if [ "$match_count" -eq 0 ]; then
+				echo "!!! ERR Could not find zellij session matching '$session'"
+				return 1
+			elif [ "$match_count" -eq 1 ]; then
+				# Only one partial match, use it
+				sid="$matches"
+			else
+				# Multiple matches, use fzf to select
+				if command -v fzf >/dev/null 2>&1; then
+					sid=$(echo "$matches" | fzf --prompt="Select zellij session: ")
+					if [ -z "$sid" ]; then
+						echo "No session selected"
+						return 1
+					fi
+				else
+					echo "!!! ERR Multiple sessions found matching '$session' but fzf is not installed:"
+					echo "$matches"
+					return 1
+				fi
+			fi
+		fi
+	fi
+
+	if [ -z "$sid" ]; then
+		echo "!!! ERR Could not find a running zellij session"
+		return 1
+	else
+		echo "Attaching to zellij session: $sid"
 		zellij attach "$sid"
 	fi
 }
@@ -110,7 +199,7 @@ function zkill {
 		return 1
 	fi
 
-	local session_count=$(echo "$sessions" | wc -l)
+	local session_count=$(echo "$sessions" | grep -c .)
 
 	if [ -n "$session" ]; then
 		# Session name provided, find matching session (partial match allowed)

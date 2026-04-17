@@ -29,11 +29,16 @@ keybind = ctrl+shift+minus=decrease_font_size:1
 theme = "Molokai"
 # Empty values reset the configuration to the default value
 # font-family = "IosevkaTerm NFM"
-font-family = "IosevkaTerm NFM Light"
-font-family-bold = "IosevkaTerm NFM Medium"
-# font-family = "PragmataPro Nerd Font"
-# font-family = "Pragmasevka_NF"
-
+#font-family = "IosevkaTerm NFM Light"
+#font-family-bold = "IosevkaTerm NFM Medium"
+#font-family = "PragmataPro Nerd Font"
+# font-family = "Pragmasevka"
+# font-family = "M+1Code Nerd Font Mono"
+# font-family-bold = "M+1Code Nerd Font Mono Bold"
+# font-family = "VictorMono NFM"
+# font-family-bold = "VictorMono NFM Bold"
+font-family = "M+1Code Nerd Font Mono"
+font-family-bold = "M+1Code Nerd Font Mono SemBd"
 # Shaders: git clone --depth 1 https://github.com/hackr-sh/ghostty-shaders
 custom-shader = ~/.config/ghostty/shaders/cursor_blaze.glsl
 

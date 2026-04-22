@@ -25,6 +25,7 @@ default-command = "status"
 
 [[--scope]]
 --when.repositories = ["~/Workspace/AdviceLink/"]
+
 [--scope.user]
 email = "sebastien@advicelink.co.nz"
 

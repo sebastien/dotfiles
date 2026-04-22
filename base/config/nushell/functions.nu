@@ -16,6 +16,11 @@ def get-term-multiplexer [] {
     }
 }
 
+# Whether lazy-tmux integration is enabled and available
+def lazy-tmux-enabled [] {
+    ("FEATURE_LAZY_TMUX" in $env) and $env.FEATURE_LAZY_TMUX == "1" and (which lazy-tmux | is-not-empty)
+}
+
 # List sessions for the current multiplexer
 def tlist [] {
     let mux = (get-term-multiplexer)
@@ -36,6 +41,26 @@ def tlist [] {
 # Attach to a tmux/zellij session
 def tat [session?: string] {
     let mux = (get-term-multiplexer)
+
+    if $mux == "tmux" and (lazy-tmux-enabled) {
+        let sessions = (do --ignore-errors {
+            tmux list-session | lines | each { |line| $line | split column ":" | get column1.0 }
+        } | default [])
+        let exact_matches = if ($session | is-empty) {
+            []
+        } else {
+            $sessions | where { |name| $name == $session }
+        }
+        let exact = if ($exact_matches | is-empty) { null } else { $exact_matches | first }
+
+        if ($exact | is-empty) {
+            ^lazy-tmux picker
+            return
+        }
+
+        tmux attach-session -t $exact
+        return
+    }
     
     let sid = if ($session | is-empty) {
         # Get the last session
@@ -79,12 +104,65 @@ def tat [session?: string] {
     }
 }
 
+# List sessions, using lazy-tmux when enabled
+def tls [] {
+    if (get-term-multiplexer) == "tmux" and (lazy-tmux-enabled) {
+        ^lazy-tmux list
+    } else {
+        tlist
+    }
+}
+
 # Create a new tmux/zellij session
 def tnew [name: string] {
     let mux = (get-term-multiplexer)
+    let sessions = (match $mux {
+        "tmux" => {
+            tmux list-session | lines | each { |line| $line | split column ":" | get column1.0 }
+        }
+        "zellij" => {
+            ^zellij list-sessions | ansi strip | lines | each { |line| $line | split words | first }
+        }
+    })
+
+    let matches = if ($sessions | is-empty) {
+        []
+    } else {
+        $sessions | where { |session| $session | str contains $name }
+    }
+
+    let selected = if ($matches | is-empty) {
+        $name
+    } else if (which fzf | is-not-empty) {
+        let options = ([$name] | append $matches | uniq)
+        let choice = ($options | str join "\n" | ^fzf --prompt "Select session: " --header "Choose existing session or create requested name")
+        if ($choice | is-empty) {
+            print "No session selected"
+            return
+        } else {
+            $choice | str trim
+        }
+    } else {
+        $name
+    }
+
+    let exists = ($sessions | any { |session| $session == $selected })
+
     match $mux {
-        "tmux" => { tmux new -t $name }
-        "zellij" => { zellij attach --create $name }
+        "tmux" => {
+            if $exists {
+                tmux attach-session -t $selected
+            } else {
+                tmux new -s $selected
+            }
+        }
+        "zellij" => {
+            if $exists {
+                zellij attach $selected
+            } else {
+                zellij attach --create $selected
+            }
+        }
     }
 }
 

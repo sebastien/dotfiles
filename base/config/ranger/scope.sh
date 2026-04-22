@@ -124,6 +124,14 @@ handle_extension() {
 		python -m json.tool -- "${FILE_PATH}" && exit 5
 		;;
 
+	## JSON Lines
+	jsonl | ndjson)
+		jq --color-output -R 'fromjson' "${FILE_PATH}" && exit 5
+		env COLORTERM=8bit bat --color=always --style="${BAT_STYLE}" \
+			--language=json -- "${FILE_PATH}" && exit 5
+		exit 2
+		;;
+
 	## JavaScript / TypeScript
 	js | jsx | ts | tsx | mjs | cjs)
 		if [[ "$(stat --printf='%s' -- "${FILE_PATH}")" -gt "${HIGHLIGHT_SIZE_MAX}" ]]; then

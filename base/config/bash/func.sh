@@ -17,6 +17,14 @@ function tat {
 	case $TERM_MULTIPLEXER in
 	tmux)
 		sessions=$(tmux list-sessions 2>/dev/null | cut -d: -f1)
+		if [ "${FEATURE_LAZY_TMUX:-}" = "1" ] && command -v lazy-tmux >/dev/null 2>&1; then
+			if [ -n "$session" ] && printf '%s\n' "$sessions" | grep -Fxq -- "$session"; then
+				sid="$session"
+			else
+				lazy-tmux picker
+				return $?
+			fi
+		fi
 		;;
 	zellij)
 		sessions=$(zellij list-sessions 2>/dev/null | sed 's/\x1B\[[0-9;]*m//g' | awk '{print $1}')
@@ -105,12 +113,57 @@ function tlist {
 }
 
 function tnew {
+	local requested="$1"
+	local sessions=""
+	local matches=""
+	local selection=""
+
+	if [ -z "$requested" ]; then
+		echo "!!! ERR Need to provide a session name"
+		return 1
+	fi
+
 	case $TERM_MULTIPLEXER in
 	tmux)
-		tmux new -t "$1"
+		sessions=$(tmux list-sessions 2>/dev/null | cut -d: -f1)
 		;;
 	zellij)
-		zellij attach --create "$1"
+		sessions=$(zellij list-sessions 2>/dev/null | sed 's/\x1B\[[0-9;]*m//g' | awk '{print $1}')
+		;;
+	esac
+
+	if [ -n "$sessions" ]; then
+		matches=$(printf '%s\n' "$sessions" | grep -F -- "$requested")
+	fi
+
+	if [ -n "$matches" ]; then
+		if command -v fzf >/dev/null 2>&1; then
+			selection=$(printf '%s\n%s\n' "$requested" "$matches" | awk '!seen[$0]++' | fzf --prompt="Select session: " --header="Choose existing session or create requested name")
+			if [ -z "$selection" ]; then
+				echo "No session selected"
+				return 1
+			fi
+		else
+			selection="$requested"
+		fi
+	else
+		selection="$requested"
+	fi
+
+	case $TERM_MULTIPLEXER in
+	tmux)
+		if [ -n "$sessions" ] && printf '%s\n' "$sessions" | grep -Fxq -- "$selection"; then
+			tmux attach-session -t "$selection"
+		else
+			tmux new -s "$selection"
+		fi
+		;;
+	zellij)
+		if [ -n "$sessions" ] && printf '%s\n' "$sessions" | grep -Fxq -- "$selection"; then
+			zellij attach "$selection"
+		else
+			zellij attach --create "$selection"
+		fi
 		;;
 	esac
 }
@@ -179,7 +232,11 @@ function zat {
 }
 
 function tls {
-	tmux list-session | cut -d: -f1
+	if [ "${FEATURE_LAZY_TMUX:-}" = "1" ] && command -v lazy-tmux >/dev/null 2>&1; then
+		lazy-tmux list
+	else
+		tmux list-session | cut -d: -f1
+	fi
 }
 
 function zls {

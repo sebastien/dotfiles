@@ -1,4 +1,10 @@
 .pyre
+.run
+.playwright*
+.memo/index
+.wrangler
+*.js.map
+*.css.map
 *.tsbuildinfo
 opencodetmp
 .opencode

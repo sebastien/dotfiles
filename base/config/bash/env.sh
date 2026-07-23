@@ -9,6 +9,7 @@ export NODE_PATH="$NPM_PACKAGES/lib/node_modules:$NODE_PATH"
 export DENO_INSTALL="$HOME/.deno"
 export BUN_INSTALL="$HOME/.bun"
 export SINK_DIFF="nvim -d"
+# export FEATURE_LAZY_TMUX=1
 export TERM_MULTIPLEXER=tmux
 if [ -e "/opt/homebrew/bin/brew" ]; then
 	eval "$(/opt/homebrew/bin/brew shellenv)"
@@ -27,6 +28,10 @@ if [ -e "$HOME/.local/src/Nim" ]; then
 	LOCAL_PATH+=":$NIM_PATH/bin"
 fi
 export PATH="$LOCAL_PATH:$PATH"
+
+if [ command -v stinkpot ] >/dev/null 2>&1; then
+	eval "$(stinkpot init)"
+fi
 
 function use-openai {
 	export OPENAI_API_KEY="$OPENAI_TOKEN"

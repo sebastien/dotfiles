@@ -1,3 +1,9 @@
 # yazi.toml
 [mgr]
 show_hidden = true
+
+[opener]
+jless = [{ run = "jless %s1", block = true, for = "unix" }]
+
+[open]
+prepend_rules = [{ url = "*.json", use = "jless" }]

@@ -1,0 +1,47 @@
+onboarding = false
+
+[terminal]
+# New panes inherit the working directory of the pane they were created from.
+new_cwd = "follow"
+
+[experimental]
+# Keep recent terminal output available when Herdr has to recreate a pane.
+pane_history = true
+
+[keys]
+# Match the existing tmux and zellij prefix.
+prefix = "ctrl+x"
+
+# Workspace navigation is the fast in-app equivalent of switching sessions.
+goto = "prefix+g"
+workspace_picker = "prefix+w"
+
+# Keep the sidebar visible by default; Ctrl-x b toggles it.
+toggle_sidebar = "prefix+b"
+
+# Session lifecycle.
+detach = "prefix+d"
+
+# Tabs and panes, matching the existing tmux muscle memory where possible.
+new_tab = ["prefix+c", "prefix+shift+n"]
+split_horizontal = "prefix+q"
+split_vertical = "prefix+e"
+close_pane = "prefix+x"
+zoom = ["prefix+f", "prefix+ctrl+z"]
+
+# Pane navigation.
+focus_pane_left = "prefix+h"
+focus_pane_down = "prefix+j"
+focus_pane_up = "prefix+k"
+focus_pane_right = "prefix+l"
+
+# Tab navigation.
+previous_tab = "prefix+p"
+next_tab = "prefix+n"
+switch_tab = "prefix+1..9"
+
+# Enter Herdr's resize mode with the same prefix-first workflow.
+resize_mode = "prefix+r"
+
+[ui]
+sidebar_start_collapsed = false

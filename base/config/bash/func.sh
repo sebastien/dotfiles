@@ -168,6 +168,81 @@ function tnew {
 	esac
 }
 
+# Herdr session helpers. Named Herdr sessions are separate servers; use these
+# from the outer shell rather than from a Herdr-managed pane.
+function hls {
+	if ! command -v herdr >/dev/null 2>&1; then
+		echo "!!! ERR herdr is not installed"
+		return 1
+	fi
+	herdr session list 2>/dev/null | while read -r name rest; do
+		if [ -n "$name" ] && [ "$name" != "name" ]; then
+			printf '%s\n' "$name"
+		fi
+	done
+}
+
+function hnew {
+	local session="$1"
+
+	if [ -n "${HERDR_ENV:-}" ]; then
+		echo "!!! ERR Run hnew from the outer shell, not a Herdr pane"
+		return 1
+	fi
+	if ! command -v herdr >/dev/null 2>&1; then
+		echo "!!! ERR herdr is not installed"
+		return 1
+	fi
+	if [ -z "$session" ]; then
+		echo "!!! ERR Need to provide a session name"
+		return 1
+	fi
+
+	herdr --session "$session"
+}
+
+function hat {
+	local session="$1"
+	local sessions=""
+	local selection=""
+
+	if [ -n "${HERDR_ENV:-}" ]; then
+		echo "!!! ERR Run hat from the outer shell, not a Herdr pane"
+		return 1
+	fi
+	if ! command -v herdr >/dev/null 2>&1; then
+		echo "!!! ERR herdr is not installed"
+		return 1
+	fi
+
+	sessions=$(hls)
+	if [ -z "$sessions" ]; then
+		echo "!!! ERR No Herdr sessions found"
+		return 1
+	fi
+
+	if [ -n "$session" ]; then
+		selection=$(printf '%s\n' "$sessions" | grep -Fx -- "$session")
+		if [ -z "$selection" ]; then
+			selection=$(printf '%s\n' "$sessions" | grep -F -- "$session")
+		fi
+	fi
+
+	if [ -z "$selection" ]; then
+		if command -v fzf >/dev/null 2>&1; then
+			selection=$(printf '%s\n' "$sessions" | fzf --prompt="Select Herdr session: ")
+		else
+			selection=$(printf '%s\n' "$sessions" | tail -n1)
+		fi
+	fi
+
+	if [ -z "$selection" ]; then
+		echo "No session selected"
+		return 1
+	fi
+	herdr session attach "$selection"
+}
+
 function znew {
 	zellij attach --create "$1"
 }
@@ -294,7 +369,7 @@ function pl {
 	if [ -z "$1" ]; then
 		echo "Need to give a query string to lookup corresponding processes"
 	else
-		ps aux | grep $1 | grep -v grep
+		ps aux | grep "$1" | grep -v grep
 	fi
 
 }
@@ -303,11 +378,11 @@ function kl {
 	if [ -z "$1" ]; then
 		echo "Need to give a query string to lookup corresponding processes"
 	else
-		for pid in $(ps aux | grep $1 | grep -v grep | awk '{print $2}'); do
+		for pid in $(ps aux | grep "$1" | grep -v grep | awk '{print $2}'); do
 			echo "Killing $pid"
-			kill -9 $pid
+			kill -9 "$pid"
 		done
-		ps aux | grep $1 | grep -v grep
+		ps aux | grep "$1" | grep -v grep
 	fi
 
 }

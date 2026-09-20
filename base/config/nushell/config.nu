@@ -259,10 +259,6 @@ source ~/.config/nushell/integrations.nu
 # Uncomment the ones you want to use after generating the init files
 # --
 
-# Broot - file navigator
-# Generate with: broot --print-shell-function nushell | save -f ~/.config/broot/launcher/nushell/br
-# use ~/.config/broot/launcher/nushell/br *
-
 # Mise - polyglot version manager
 # Generate with: mkdir ~/.cache/mise; mise activate nu | save -f ~/.cache/mise/init.nu
 # source ~/.cache/mise/init.nu

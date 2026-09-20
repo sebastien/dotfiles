@@ -2,5 +2,4 @@ deps
 base/pypirc
 backup
 manifest.lst
-base/config/bash/atuin.sh
 base/config/bash/preexec.sh

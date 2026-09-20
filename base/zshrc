@@ -1,4 +1,1 @@
 export PATH=/opt/homebrew/bin:$PATH
-
-
-source /home/sebastien/.config/broot/launcher/bash/br

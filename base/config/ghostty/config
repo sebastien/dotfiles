@@ -40,7 +40,7 @@ theme = "Molokai"
 font-family = "M+1Code Nerd Font Mono"
 font-family-bold = "M+1Code Nerd Font Mono SemBd"
 # Shaders: git clone --depth 1 https://github.com/hackr-sh/ghostty-shaders
-custom-shader = ~/.config/ghostty/shaders/cursor_blaze.glsl
+# custom-shader = ~/.config/ghostty/shaders/cursor_blaze.glsl
 
 # Finer mouse control
 mouse-scroll-multiplier = 0.5

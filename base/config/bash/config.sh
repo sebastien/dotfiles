@@ -54,7 +54,6 @@ if [ -z "$BASH_CONFIG_LOADED" ]; then
     # Local per-shell history (each terminal has completely separate history)
 	load-source "$HOME/Workspace/Perso/nota/src/sh/libnota.sh"
 	load-source "$HOME/.sdkman/bin/sdkman-init.sh" silent
-	load-source "$HOME/.config/broot/launcher/bash/br"
 
 	OS=$(uname)
 	for completion in $BASH_BASE/completion.*.sh; do

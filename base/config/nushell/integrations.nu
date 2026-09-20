@@ -37,13 +37,6 @@ def setup-pyenv [] {
 }
 
 # --
-# Broot (file navigator)
-# https://dystroy.org/broot/
-# --
-# Note: Broot integration is handled via 'use' in config.nu
-# The br function allows directory navigation
-
-# --
 # FZF (fuzzy finder)
 # https://github.com/junegunn/fzf
 # Note: FZF options should be set in env.nu

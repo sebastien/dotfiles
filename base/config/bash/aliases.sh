@@ -1,4 +1,7 @@
 alias e=nvim
+alias oc=opencode2
+alias lmk=littlemake
+alias lmake=littlemake
 alias l="nvim -R"
 if [ -n "$(which eza 2>/dev/null)" ]; then
 	alias lst="eza --long --tree"

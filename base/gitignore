@@ -42,4 +42,8 @@ node_modules/*
 *.tar.gz
 *.tar.bz2
 *.tar.xz
+.memo/*/memory
+.littledocs.json
+.littledocs.json.gz
+.littlemake
 # gems

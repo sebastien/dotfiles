@@ -9,6 +9,8 @@ export NODE_PATH="$NPM_PACKAGES/lib/node_modules:$NODE_PATH"
 export DENO_INSTALL="$HOME/.deno"
 export BUN_INSTALL="$HOME/.bun"
 export SINK_DIFF="nvim -d"
+export BROWSERLESS_API_URL="central:3000"
+export PLAYWRIGHT_WS_ENDPOINT="ws://central:3000"
 # export FEATURE_LAZY_TMUX=1
 export TERM_MULTIPLEXER=tmux
 if [ -e "/opt/homebrew/bin/brew" ]; then

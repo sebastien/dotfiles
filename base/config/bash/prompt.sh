@@ -55,7 +55,8 @@ function palette {
 	echo
 }
 
-if [ -z "$NOCOLOR" ]; then
+if [[ $- == *i* && -z "$NOCOLOR" && -n "$TERM" && "$TERM" != dumb ]] &&
+   tput colors &>/dev/null; then
 	CYAN="$(tput setaf 33)"
 	BLUE_DK="$(tput setaf 27)"
 	BLUE="$(tput setaf 33)"
@@ -72,7 +73,7 @@ if [ -z "$NOCOLOR" ]; then
 	BOLD="$(tput bold)"
 	REVERSE="$(tput rev)"
 	RESET="$(tput sgr0)"
-elif tput setaf 1 &>/dev/null; then
+else
 	CYAN=""
 	BLUE_DK=""
 	BLUE=""

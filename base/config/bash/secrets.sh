@@ -32,6 +32,9 @@ function load-secrets {
 		secret_def CODESTRAL_API_KEY codestral.token
 		secret_def MISTRAL_API_KEY mistral.token
 		secret_def CONTEXT7_API_KEY context7.token
+		if [ -z "${KAGI_API_KEY:-}" ]; then
+			secret_def KAGI_API_KEY kagi.api.key
+		fi
 		if [ ! -z "${HAS_SECRET}" ]; then
 			echo "Secrets: ${HAS_SECRET[@]}"
 		fi

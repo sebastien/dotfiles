@@ -1,0 +1,13 @@
+{
+	"$schema": "https://opencode.ai/config.json",
+	"plugins": ["opencode-tool-kagi"],
+	"mcp": {
+		"servers": {
+			"playwright": {
+				"type": "local",
+				"command": ["npx", "-y", "@playwright/mcp@latest", "--cdp-endpoint", "http://central:3000"]
+			}
+		}
+	},
+	// Kagi is connected via /connect (or KAGI_API_KEY); it replaces websearch/webfetch.
+}

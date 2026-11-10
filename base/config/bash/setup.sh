@@ -11,11 +11,6 @@ if [ ! -d "$HOME/.fzf" ]; then
 	echo "DONE!"
 fi
 
-APP_MISE="$(which mise 2>/dev/null)"
-if [ -n "$APP_MISE" ] && [ -e "$APP_MISE" ]; then
-	eval "$($APP_MISE activate bash)"
-fi
-
 # SEE: https://github.com/lincheney/fzf-tab-completion#bash
 # if [ ! -d "$HOME/.config/bash/fzf-completion.sh" ]; then
 # 	source "$HOME/.config/bash/fzf-completion.sh"

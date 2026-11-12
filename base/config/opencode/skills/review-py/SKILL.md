@@ -41,9 +41,9 @@ class SomeData:
 #
 # -----------------------------------------------------------------------------
 
-# NOTE: Put your utilities first, and prefix them with _ if they're not exported
+# NOTE: Put your utilities first; `__all__` lists the exports, so no `_` prefix
 
-def _doSomething(a: int, b: int) -> int:
+def doSomething(a: int, b: int) -> int:
   """Do something with a and b"""
   ...
 
@@ -93,7 +93,8 @@ Naming:
 - Class and static methods and attributes are `PascalCase`
 - Functions, methods, fields, attributes, parameters and locals are `camelCase`
 - Globals and constants are `UPPER_CASE`
-- Private/protected members are prefixed with `_`
+- No leading `_` on names: `__all__` declares a module's exports, and Python protocol names (`__init__`, `__all__`) keep their spelling
+- Write `__all__` as a list literal (`__all__ = ["run", "report"]`), not a computed value such as `"run report".split()`, so linters, type checkers and IDEs can read it
 
 Documentation:
 - Short, behavior-focused docstrings for public elements

@@ -40,14 +40,14 @@ class SomeContext {
 //
 // -----------------------------------------------------------------------------
 
-// NOTE: Put your utilities first, and prefix them with _ if they're not exported
+// NOTE: Put your utilities first; `export` marks the public API, so no `_` prefix
 
 /** Do something with `a` and `b`.
  * @param {number} a
  * @param {number} b
  * @returns {number}
  */
-function _doSomething(a, b) {
+function doSomething(a, b) {
 	return a + b;
 }
 
@@ -89,7 +89,7 @@ class SomeOperations {
  * @returns {number}
  */
 export function myExportedFunction(a, b) {
-	return _doSomething(a, b);
+	return doSomething(a, b);
 }
 
 // EOF
@@ -109,7 +109,7 @@ Naming:
 - Static methods and static attributes are `PascalCase`
 - Functions, instance methods, fields, attributes, parameters and locals are `camelCase`
 - Globals and constants are `UPPER_CASE`
-- Private/protected members are prefixed with `_`
+- No leading `_` on names: `export` declares a module's public API
 
 Documentation:
 - Short, behavior-focused JSDoc comments for public elements

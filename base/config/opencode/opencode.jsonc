@@ -6,8 +6,24 @@
 			"playwright": {
 				"type": "local",
 				"command": ["npx", "-y", "@playwright/mcp@latest", "--cdp-endpoint", "http://central:3000"]
-			}
+      },
+      "browse": {
+        "type": "local",
+        "command": [
+          "browse",
+          "mcp"
+        ],
+        "cwd": "~",
+        "pool": true,
+        "environment": {
+          "OPENCODE_BROWSER_RUNTIME": "auto-update"
+        }
+      }
 		}
+	},
+	// The memo subagent definition is shared (symlinked from the memo repo); pin its model here.
+	"agent": {
+		"memo": { "model": "openai/gpt-6-luna" }
 	},
 	// Kagi is connected via /connect (or KAGI_API_KEY); it replaces websearch/webfetch.
 }

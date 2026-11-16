@@ -93,6 +93,7 @@ Naming:
 - Class and static methods and attributes are `PascalCase`
 - Functions, methods, fields, attributes, parameters and locals are `camelCase`
 - Globals and constants are `UPPER_CASE`
+- Only use `_` prefix for private methods or functions, not for classes or values
 - No leading `_` on names: `__all__` declares a module's exports, and Python protocol names (`__init__`, `__all__`) keep their spelling
 - Write `__all__` as a list literal (`__all__ = ["run", "report"]`), not a computed value such as `"run report".split()`, so linters, type checkers and IDEs can read it
 

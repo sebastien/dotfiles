@@ -18,6 +18,11 @@
         "environment": {
           "OPENCODE_BROWSER_RUNTIME": "auto-update"
         }
+      },
+      // Remote MCP with OAuth: sign in via /mcps on first use.
+      "fibery": {
+        "type": "remote",
+        "url": "https://mcp.fibery.io/mcp"
       }
 		}
 	},

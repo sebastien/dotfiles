@@ -1,0 +1,397 @@
+# Kash interactive initialization
+#
+# Loaded as entries before the first prompt ($KASH_INIT, otherwise
+# ~/.config/kash/init.kash). Bash remains the login/environment layer: PATH,
+# secrets and tool hooks are inherited from it, so nothing here re-exports
+# them. Includes are not available in interactive entries, hence one file.
+#
+# Aliases expand at command position only, once, and take literal argv
+# prefixes. Functions are callable in command position; zero-parameter calls
+# use (name ()), and every other call is (name arg...).
+
+# ---------------------------------------------------------------------------
+# Aliases
+# ---------------------------------------------------------------------------
+
+alias e = ["nvim"]
+alias oc = ["opencode2"]
+alias lmk = ["littlemake"]
+alias lmake = ["littlemake"]
+alias l = ["nvim", "-R"]
+alias pk-add = ["sudo", "dnf", "install"]
+alias pk-rem = ["sudo", "dnf", "uninstall"]
+alias pk-fd = ["sudo", "dnf", "search"]
+alias ned = ["nota-edit"]
+alias jsonpp = ["python3", "-m", "json.tool"]
+alias aider-claude = ["aider", "--model", "anthropic/claude-3-opus", "--edit-format", "diff"]
+alias s = ["kitten", "ssh"]
+
+# The bash setup aliased ls/lst only when eza existed and open only when
+# gnome-open existed. Aliases cannot be declared conditionally, so those are
+# left to hosts that always provide the tool.
+
+# ---------------------------------------------------------------------------
+# Session values
+# ---------------------------------------------------------------------------
+
+let term-mux = (line $(sh -c "printenv TERM_MULTIPLEXER 2>/dev/null || true"))
+let mux = (if (empty? term-mux) then "tmux" else term-mux)
+let host = (line $(hostname))
+let home = (line $(sh -c "printenv HOME 2>/dev/null || true"))
+let user = (line $(id -un))
+let fzf-path = (line $(sh -c "command -v fzf 2>/dev/null || true"))
+let lazy-tmux-path = (line $(sh -c "command -v lazy-tmux 2>/dev/null || true"))
+let lazy-tmux-mode = (line $(sh -c "printenv FEATURE_LAZY_TMUX 2>/dev/null || true"))
+
+let colors-off = ((ne? "" (line $(sh -c "printenv NO_COLOR 2>/dev/null || true")))
+	or (ne? "" (line $(sh -c "printenv NOCOLOR 2>/dev/null || true")))
+	or (eq? (line $(sh -c "printenv TERM 2>/dev/null || true")) "dumb"))
+
+let cyan = (if colors-off then "" else $(sh -c "tput setaf 33 2>/dev/null || true"))
+let red = (if colors-off then "" else $(sh -c "tput setaf 124 2>/dev/null || true"))
+let purple-dark = (if colors-off then "" else $(sh -c "tput setaf 55 2>/dev/null || true"))
+let purple = (if colors-off then "" else $(sh -c "tput setaf 92 2>/dev/null || true"))
+let gold = (if colors-off then "" else $(sh -c "tput setaf 214 2>/dev/null || true"))
+let gold-dark = (if colors-off then "" else $(sh -c "tput setaf 208 2>/dev/null || true"))
+let bold = (if colors-off then "" else $(sh -c "tput bold 2>/dev/null || true"))
+let reverse = (if colors-off then "" else $(sh -c "tput rev 2>/dev/null || true"))
+let reset = (if colors-off then "" else $(sh -c "tput sgr0 2>/dev/null || true"))
+
+# ---------------------------------------------------------------------------
+# Small helpers
+# ---------------------------------------------------------------------------
+
+def lines-of text = (if (empty? text) then [] else (split "\n" (strip text)))
+
+def blank? value = (nil? value) or (empty? value)
+
+def herdr-sessions () = (filter (item => (ne? "" item) and (ne? "name" item))
+	(lines-of $(sh -c "herdr session list 2>/dev/null | cut -d' ' -f1 || true")))
+
+def tmux-sessions () = (lines-of
+	$(sh -c "tmux list-sessions 2>/dev/null | cut -d: -f1 || true"))
+
+def zellij-sessions () = (lines-of
+	$(sh -c "zellij list-sessions --no-formatting 2>/dev/null | cut -d' ' -f1 || true"))
+
+def mux-sessions () = (if mux == "tmux" then (tmux-sessions ()) else (zellij-sessions ()))
+
+def pick-session requested sessions
+	if (empty? sessions)
+		return ""
+	if (not (blank? requested))
+		let exact = (filter (item => item == requested) sessions)
+		let matches = (filter (item => includes? requested item) sessions)
+		let found = (count matches)
+		if (not (empty? exact))
+			return (first exact)
+		if found == 0
+			return ""
+		if found == 1
+			return (first matches)
+		if (ne? "" fzf-path)
+			return (line $(printf "%s\n" $...matches | fzf --prompt="Select session: " || true))
+		return ""
+	if (count sessions) == 1
+		return (first sessions)
+	if (ne? "" fzf-path)
+		return (line $(printf "%s\n" $...sessions | fzf --prompt="Select session: " || true))
+	return (nth -1 sessions)
+
+def pick-new requested sessions
+	let matches = (filter (item => includes? requested item) sessions)
+	if (empty? matches)
+		return requested
+	if (ne? "" fzf-path)
+		let choices = (unique (concat [requested] matches))
+		return (line $(printf "%s\n" $...choices | fzf --prompt="Select session: " --header="Choose existing session or create requested name" || true))
+	return requested
+
+# ---------------------------------------------------------------------------
+# Multiplexer and Herdr helpers
+# ---------------------------------------------------------------------------
+
+def attach-session name
+	if mux == "tmux"
+		tmux attach-session -t $name
+	else
+		zellij attach $name
+
+def tat session
+	let available = (mux-sessions ())
+	if (empty? available)
+		echo "!!! ERR No running sessions found"
+		(fail! "no running sessions found")
+	if (lazy-tmux-mode == "1") and (ne? "" lazy-tmux-path)
+		if (blank? session) or (not (in? session available))
+			lazy-tmux picker
+			return 0
+		(attach-session session)
+		return 0
+	let target = (pick-session session available)
+	if (empty? target)
+		echo "!!! ERR Could not find a running session"
+		(fail! "could not find a running session")
+	(attach-session target)
+
+def tnew requested
+	if (blank? requested)
+		echo "!!! ERR Need to provide a session name"
+		(fail! "need to provide a session name")
+	let available = (mux-sessions ())
+	let target = (pick-new requested available)
+	if (empty? target)
+		echo "No session selected"
+		(fail! "no session selected")
+	if mux == "tmux"
+		if (in? target available)
+			tmux attach-session -t $target
+		else
+			tmux new -s $target
+	else
+		if (in? target available)
+			zellij attach $target
+		else
+			zellij attach --create $target
+
+def tls ()
+	if (lazy-tmux-mode == "1") and (ne? "" lazy-tmux-path)
+		lazy-tmux list
+	else
+		for name in (mux-sessions ())
+			echo $name
+
+def znew name
+	zellij attach --create $name
+
+def zls ()
+	for name in (zellij-sessions ())
+		echo $name
+
+def zat session
+	let available = (zellij-sessions ())
+	if (empty? available)
+		echo "!!! ERR No running zellij sessions found"
+		(fail! "no running zellij sessions found")
+	let target = (if (blank? session) then (nth -1 available) else (pick-session session available))
+	if (empty? target)
+		echo "!!! ERR Could not find a running zellij session"
+		(fail! "could not find a running zellij session")
+	echo "Attaching to zellij session: $target"
+	zellij attach $target
+
+def zkill session
+	let available = (zellij-sessions ())
+	if (empty? available)
+		echo "No zellij sessions found"
+		(fail! "no zellij sessions found")
+	let target = (if (not (blank? session)) then
+			(line $(printf "%s\n" $...available | grep "^$session" | head -n 1 || true))
+		elif (count available) == 1 then (first available)
+		elif (ne? "" fzf-path) then
+			(line $(printf "%s\n" $...available | fzf --prompt="Select session to kill: " || true))
+		else "")
+	if (empty? target)
+		echo "!!! ERR Could not find zellij session '$session'"
+		(fail! "could not find zellij session")
+	echo "Killing zellij session: $target"
+	zellij delete-session $target --force || zellij kill-session $target
+
+def hls ()
+	for name in (herdr-sessions ())
+		echo $name
+
+def hnew session
+	if (ne? "" (line $(sh -c "printenv HERDR_ENV 2>/dev/null || true")))
+		echo "!!! ERR Run hnew from the outer shell, not a Herdr pane"
+		(fail! "run hnew from the outer shell")
+	if (empty? (line $(sh -c "command -v herdr 2>/dev/null || true")))
+		echo "!!! ERR herdr is not installed"
+		(fail! "herdr is not installed")
+	if (blank? session)
+		echo "!!! ERR Need to provide a session name"
+		(fail! "need to provide a session name")
+	herdr --session $session
+
+def hat session
+	if (ne? "" (line $(sh -c "printenv HERDR_ENV 2>/dev/null || true")))
+		echo "!!! ERR Run hat from the outer shell, not a Herdr pane"
+		(fail! "run hat from the outer shell")
+	if (empty? (line $(sh -c "command -v herdr 2>/dev/null || true")))
+		echo "!!! ERR herdr is not installed"
+		(fail! "herdr is not installed")
+	let available = (herdr-sessions ())
+	if (empty? available)
+		echo "!!! ERR No Herdr sessions found"
+		(fail! "no herdr sessions found")
+	let exact = (filter (item => item == session) available)
+	let selected = (if (blank? session) then ""
+		elif (not (empty? exact)) then (first exact)
+		else (first (filter (item => includes? session item) available)))
+	let target = (if (not (blank? selected)) then selected
+		elif (ne? "" fzf-path) then
+			(line $(printf "%s\n" $...available | fzf --prompt="Select Herdr session: " || true))
+		else (nth -1 available))
+	if (blank? target)
+		echo "No session selected"
+		(fail! "no session selected")
+	herdr session attach $target
+
+# ---------------------------------------------------------------------------
+# Process and terminal helpers
+# ---------------------------------------------------------------------------
+
+def pl query
+	if (blank? query)
+		echo "Need to give a query string to lookup corresponding processes"
+		(fail! "need a query string")
+	ps aux | grep $query | grep -v grep ?
+
+def kl query
+	if (blank? query)
+		echo "Need to give a query string to lookup corresponding processes"
+		(fail! "need a query string")
+	for pid in (lines-of $(pgrep -f $query || true))
+		echo "Killing $pid"
+		x/kill -9 $pid
+	ps aux | grep $query | grep -v grep ?
+
+def pk query
+	let process = (line $(ps aux | grep $query | grep -v grep | head -n 1 || true))
+	if (empty? process)
+		echo "ERR Can't find process matching: $query"
+		(fail! "can't find matching process")
+	let pid = (line $(printf "%s" $process | tr -s " " | cut -d " " -f2))
+	if $?(x/kill -9 $pid).ok
+		echo "OK Process '$query' pid=$pid killed"
+	else
+		echo "FAIL Could not kill process '$query' pid=$pid"
+
+def do-set-term-title title
+	printf "%b" "\\033]0;$title\\007"
+
+def palette ()
+	for color in (split "\n" (strip $(seq 0 255)))
+		tput setab $color
+		printf "%s " $color
+	tput sgr0
+	echo
+
+# ---------------------------------------------------------------------------
+# cd-store helpers. The executable keeps recording directories from the
+# prompt, but a Kash function cannot change the session directory, so
+# cd-search and cd-restore only print their selection. Do not define a
+# `cd-store` function: command position resolves lexical callables before
+# executables, so it would shadow the tool's own subcommands.
+# ---------------------------------------------------------------------------
+
+def cd-log args...
+	cd-store log $...args
+
+def cd-entries ()
+	cd-store entries
+
+def cd-prune ()
+	cd-store prune
+
+def cd-last args...
+	cd-store last $...args
+
+def cd-search query
+	cd-store search $query
+
+# ---------------------------------------------------------------------------
+# Utilities
+# ---------------------------------------------------------------------------
+
+def mdless files...
+	pandoc -s -f markdown -t html $...files | w3m -dump -T text/html
+
+def do-release-upgrade releasever
+	sudo dnf --refresh upgrade
+	sudo dnf system-upgrade --releasever=$releasever
+
+# ---------------------------------------------------------------------------
+# Prompt
+#
+# Native right prompt: readline measures colours/Unicode and hides it before
+# it overlaps input. Do not pad it or emit cursor-motion escapes here.
+# ---------------------------------------------------------------------------
+
+def record-dir () = (line $(sh -c "command -v cd-store >/dev/null 2>&1 && cd-store >/dev/null 2>&1 || true"))
+
+def host-icon ()
+	if (includes? "bench" host)
+		return "🧰 "
+	if (includes? "renade" host) or (includes? "osmos" host)
+		return "💻 "
+	if (starts? "central" host)
+		return "🏟️ "
+	if (starts? "cerise" host)
+		return "🍒 "
+	if (starts? "X1T" host)
+		return "📓 "
+	if (starts? "AL-" host)
+		return "🏦 "
+	return ""
+
+def jj-root () = (line $(sh -c "jj root 2>/dev/null || true"))
+
+def jj-seg ()
+	let info = (line $(sh -c "jj log --no-pager -r @ --no-graph -T 'change_id.shortest() ++ \"|\" ++ bookmarks.join(\",\") ++ \"|\" ++ description.first_line() ++ \"|\" ++ if(conflict, \"!\", \"\")' 2>/dev/null || true"))
+	let parts = (split "|" (if (empty? info) then "|||" else info))
+	let change = (nth 0 parts)
+	let bookmarks = (nth 1 parts)
+	let description = (nth 2 parts)
+	let conflict = (nth 3 parts)
+	let nearest = (if (empty? bookmarks) then
+			(line $(sh -c "jj log --no-pager -r 'heads(::@ & bookmarks())' --no-graph -T 'bookmarks.join(\",\")' 2>/dev/null || true"))
+		else bookmarks)
+	let raw-bookmark = (first (split "," nearest))
+	let bookmark = (if (ends? "*" raw-bookmark) then (slice 0 -1 raw-bookmark) else raw-bookmark)
+	let ref = (if (empty? bookmark) then change else (str change ":" bookmark))
+	let marker = (if (empty? description) then "?" else "")
+	let modified = (if (empty? (line $(sh -c "jj diff --stat --no-pager 2>/dev/null | tail -n +2 || true"))) then "" else "+")
+	let conflict-display = (if (empty? conflict) then "" else (str " " red conflict))
+	if (empty? change)
+		return ""
+	return (str reset purple-dark "[jj " purple bold ref marker modified purple-dark "]" reset conflict-display)
+
+def git-seg ()
+	let branch = (line $(sh -c "git branch --show-current 2>/dev/null || true"))
+	let sha = (line $(sh -c "git rev-parse --short HEAD 2>/dev/null || true"))
+	let ref = (if (empty? branch) then sha else branch)
+	let dirty = (if (empty? (line $(sh -c "git status --porcelain 2>/dev/null || true"))) then "" else "+")
+	if (empty? ref)
+		return ""
+	return (str reset purple-dark "[git " purple bold ref dirty purple-dark "]" reset)
+
+def scm-seg () = (if (ne? "" (jj-root ())) then (jj-seg ()) else (git-seg ()))
+
+def appenv-seg ()
+	let status = (line $(sh -c "printenv APPENV_STATUS 2>/dev/null || true"))
+	let present = (if (ne? "" (line $(sh -c "test -e .appenv && echo yes || true"))) then "▶" else "▷")
+	if (ne? "" status) or (present == "▶")
+		return (str " " gold-dark present (if (ne? "" status) then (str gold " " status) else "") gold-dark " ")
+	return ""
+
+def prompt-left info
+	let status-color = (if info.status == 0 then cyan else red)
+	let base = (basename info.dir)
+	let parent = (basename (dirname info.dir))
+	let label = (if info.dir == home then "~"
+		elif info.dir == "/" then "/"
+		elif parent == "/" then (str "/" bold base)
+		else (str parent "/" bold base))
+	return (str (host-icon ()) status-color "─░▒▓" reset status-color reverse " " label " " reset status-color "▓▒░" status-color " ▷" reset " ")
+
+def prompt-right info = (str (appenv-seg ()) (scm-seg ())
+	" " purple-dark "⛬ " (line $(ps -u $user | wc -l))
+	" ○" (line $(date +%T))
+	(if (ne? "" (line $(sh -c "printenv TMUX 2>/dev/null || true"))) then " ◫" else "")
+	(if (includes? "(" (line $(sh -c "who am i 2>/dev/null || true"))) then (str " ┈⦗ssh@" host "⦘") else "")
+	" 🐢 " reset)
+
+def kash-prompt info = (str (record-dir ()) (prompt-left info))
+
+def kash-rprompt info = (prompt-right info)

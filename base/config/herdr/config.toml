@@ -24,10 +24,12 @@ detach = "prefix+d"
 
 # Tabs and panes, matching the existing tmux muscle memory where possible.
 new_tab = ["prefix+c", "prefix+shift+n"]
-split_horizontal = "prefix+q"
-split_vertical = "prefix+e"
+# split_horizontal = "prefix+q"
+# split_vertical = "prefix+e"
 close_pane = "prefix+x"
 zoom = ["prefix+f", "prefix+ctrl+z"]
+
+
 
 # Pane navigation.
 focus_pane_left = "prefix+h"
@@ -45,3 +47,15 @@ resize_mode = "prefix+r"
 
 [ui]
 sidebar_start_collapsed = false
+
+[[keys.command]]
+key = "prefix+q"
+type = "shell"
+command = "new_id=$(herdr pane split $HERDR_ACTIVE_PANE_ID --direction down | jq -r '.result.pane.pane_id') && herdr pane run $new_id 'exec kash'"
+description = "Split horizontally and launch kash"
+
+[[keys.command]]
+key = "prefix+e"
+type = "shell"
+command = "new_id=$(herdr pane split $HERDR_ACTIVE_PANE_ID --direction right | jq -r '.result.pane.pane_id') && herdr pane run $new_id 'exec kash'"
+description = "Split vertically and launch kash"

@@ -321,6 +321,8 @@ def do-release-upgrade releasever
 def record-dir () = (line $(sh -c "command -v cd-store >/dev/null 2>&1 && cd-store >/dev/null 2>&1 || true"))
 
 def host-icon ()
+	if (eq? "agents" host) or (starts? "agents." host)
+		return "🤖 "
 	if (includes? "bench" host)
 		return "🧰 "
 	if (includes? "renade" host) or (includes? "osmos" host)
@@ -375,15 +377,22 @@ def appenv-seg ()
 		return (str " " gold-dark present (if (ne? "" status) then (str gold " " status) else "") gold-dark " ")
 	return ""
 
+def user-prefix ()
+	if (blank? user)
+		return ""
+	if (eq? "sebastien" user) or (eq? "agent" user)
+		return ""
+	return (str user " ")
+
 def prompt-left info
-	let status-color = (if info.status == 0 then cyan else red)
+	let status-color = (if info.status == 0 then gold else red)
 	let base = (basename info.dir)
 	let parent = (basename (dirname info.dir))
 	let label = (if info.dir == home then "~"
 		elif info.dir == "/" then "/"
 		elif parent == "/" then (str "/" bold base)
 		else (str parent "/" bold base))
-	return (str (host-icon ()) status-color "─░▒▓" reset status-color reverse " " label " " reset status-color "▓▒░" status-color " ▷" reset " ")
+	return (str (user-prefix ()) (host-icon ()) status-color "─░▒▓" reset status-color reverse " " label " " reset status-color "▓▒░" status-color " ▷" reset " ")
 
 def prompt-right info = (str (appenv-seg ()) (scm-seg ())
 	" " purple-dark "⛬ " (line $(ps -u $user | wc -l))

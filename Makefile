@@ -1,5 +1,8 @@
 PROFILE=base
-SOURCES=$(shell find $(PROFILE) -type f -or -type l)
+# NOTE: Broken symlinks are skipped because make cannot use them as
+# prerequisites. They usually point to sibling checkouts that may not be
+# present on every machine.
+SOURCES=$(shell find $(PROFILE) -type f -o -type l | while read -r SOURCE; do [ -e "$$SOURCE" ] && printf '%s\n' "$$SOURCE"; done)
 ACTIVE=$(filter $(PROFILE)/%,$(SOURCES) $(DEPS_BASH:%=base/config/bash/%))
 SCRIPTS=$(wildcard bin/*)
 PRODUCT=$(ACTIVE:$(PROFILE)/%=$(HOME)/.%) $(TOOLS:%=deps/bin/%) $(SCRIPTS:%=$(HOME)/.local/%)

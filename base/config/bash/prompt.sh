@@ -15,6 +15,9 @@
 HAS_MPSTAT=$(which mpstat 2>/dev/null)
 
 case $HOSTNAME in
+agents | agents.*)
+	HOSTICON="🤖 "
+	;;
 *bench*)
 	HOSTICON="🧰 "
 	;;
@@ -36,6 +39,13 @@ AL-*)
 esac
 
 SHELLICON="🐚 "
+
+CURRENT_USER=$(id -un 2>/dev/null)
+if [ -n "$CURRENT_USER" ] && [ "$CURRENT_USER" != "sebastien" ] && [ "$CURRENT_USER" != "agent" ]; then
+	USERPREFIX="$CURRENT_USER "
+else
+	USERPREFIX=""
+fi
 
 function strip-ansi() {
 	# shopt -s extglob # function uses extended globbing
@@ -104,7 +114,7 @@ function scm-type {
 }
 
 function prompt-setup {
-	STATUS_COLOR=$(if [[ $? == 0 ]]; then echo -n "${BLUE}"; else echo -n "${RED}"; fi)
+	STATUS_COLOR=$(if [[ $? == 0 ]]; then echo -n "${GOLD}"; else echo -n "${RED}"; fi)
 	export STATUS_COLOR
 	# We change the current directory
 	if declare -f -F cd-prompt-helper >/dev/null; then
@@ -114,7 +124,7 @@ function prompt-setup {
 
 function prompt-left {
 	prompt_path="$(basename $(dirname "$PWD"))/\[$BOLD\]$(basename "$PWD")"
-	echo "$HOSTICON\[$STATUS_COLOR\]─\[$RESET\]\[$STATUS_COLOR\]░▒▓\[$REVERSE\] ${prompt_path} \[$RESET\]\[$STATUS_COLOR\]▓▒░\[${STATUS_COLOR}\] ▷\[${RESET}\] "
+	echo "${USERPREFIX}$HOSTICON\[$STATUS_COLOR\]─\[$RESET\]\[$STATUS_COLOR\]░▒▓\[$REVERSE\] ${prompt_path} \[$RESET\]\[$STATUS_COLOR\]▓▒░\[${STATUS_COLOR}\] ▷\[${RESET}\] "
 }
 
 function prompt-right {

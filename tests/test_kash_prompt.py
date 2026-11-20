@@ -11,8 +11,8 @@ import unittest
 INIT = Path(__file__).resolve().parents[1] / "base/config/kash/init.kash"
 BINARY = os.environ.get("KAME_NATIVE_CLI_TEST_BINARY") or shutil.which("kame")
 TOOLS = {
-	"hostname": 'echo cerise-test',
-	"id": 'echo tester',
+	"hostname": 'echo "${TEST_HOST:-cerise-test}"',
+	"id": 'echo "${TEST_USER:-tester}"',
 	"ps": 'printf "PID\\n123\\n"',
 	"date": 'echo 12:34:56',
 	"who": 'echo "tester pts/0 (remote)"',
@@ -78,7 +78,7 @@ class KashPromptTest(unittest.TestCase):
 			]:
 				with self.subTest(scm=scm, bookmark=bookmark):
 					left, right = render(TEST_SCM=scm, TEST_BOOKMARK=bookmark)
-					self.assertEqual(left, "🍒 ─░▒▓ work/project ▓▒░ ▷ ")
+					self.assertEqual(left, "tester 🍒 ─░▒▓ work/project ▓▒░ ▷ ")
 					self.assertNotIn("⛬", left)
 					self.assertIn("▶ dev", right)
 					if expected:
@@ -92,7 +92,7 @@ class KashPromptTest(unittest.TestCase):
 					self.assertIn("🐢", right)
 					self.assertNotIn("\x1b", left + right)
 			left, right = render(TEST_SCM="git", NO_COLOR="")
-			self.assertIn("\x1b[38;5;33m", left)
+			self.assertIn("\x1b[38;5;214m", left)
 			self.assertIn("\x1b[38;5;55m", right)
 			self.assertIn("\x1b[1mproject", left)
 			self.assertNotIn("\\[", left + right)
@@ -100,6 +100,14 @@ class KashPromptTest(unittest.TestCase):
 			self.assertIn("\x1b[38;5;124m", left)
 			left, right = render(TEST_SCM="none", NO_COLOR="", NOCOLOR="1")
 			self.assertNotIn("\x1b", left + right)
+			left, _ = render(TEST_SCM="none", TEST_USER="sebastien")
+			self.assertEqual(left, "🍒 ─░▒▓ work/project ▓▒░ ▷ ")
+			left, _ = render(TEST_SCM="none", TEST_USER="agent")
+			self.assertEqual(left, "🍒 ─░▒▓ work/project ▓▒░ ▷ ")
+			for host in ("agents", "agents.example"):
+				with self.subTest(host=host):
+					left, _ = render(TEST_SCM="none", TEST_HOST=host)
+					self.assertEqual(left, "tester 🤖 ─░▒▓ work/project ▓▒░ ▷ ")
 
 
 if __name__ == "__main__":

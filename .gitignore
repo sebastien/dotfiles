@@ -1,4 +1,5 @@
 deps
+.auto/
 base/pypirc
 backup
 manifest.lst
